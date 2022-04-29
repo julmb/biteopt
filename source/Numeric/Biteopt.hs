@@ -24,10 +24,11 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
 data Opt
-data Rnd
 foreign import ccall "minimize_new" minimizeNew :: CInt -> FunPtr BiteObj -> Ptr CDouble -> Ptr CDouble -> CInt -> IO (Ptr Opt)
 foreign import ccall "minimize_init" minimizeInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "minimize_step" minimizeStep :: Ptr Opt -> Ptr Rnd -> Ptr CDouble -> IO ()
+
+data Rnd
 foreign import ccall "rng_new" rngNew :: FunPtr BiteRnd -> IO (Ptr Rnd)
 
 biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
