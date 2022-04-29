@@ -18,6 +18,5 @@ library
 
 executable test
   import:              configuration
-  hs-source-dirs:      source
   main-is:             test.hs
   build-depends:       base, biteopt
