@@ -1,18 +1,19 @@
 module Numeric.Biteopt where
 
+import Data.Void
 import Data.Coerce
 import Foreign
 import Foreign.C
 
-type Objective = CInt -> Ptr CDouble -> Ptr () -> IO CDouble
-type BiteRnd = Ptr () -> IO CUInt
+type Objective = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
+type BiteRnd = Ptr Void -> IO CUInt
 
 foreign import ccall "wrapper" mkObjective :: Objective -> IO (FunPtr Objective)
 foreign import ccall "biteopt_minimize_c" boMinimize ::
-    CInt -> FunPtr Objective -> Ptr () ->
+    CInt -> FunPtr Objective -> Ptr Void ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
-    CInt -> FunPtr BiteRnd -> Ptr () -> IO CInt
+    CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
 oo :: ([Double] -> Double) -> Objective
 oo objective n x d = do
