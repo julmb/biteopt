@@ -8,7 +8,7 @@ type Objective = CInt -> Ptr CDouble -> Ptr () -> IO CDouble
 type BiteRnd = Ptr () -> IO CUInt
 
 foreign import ccall "wrapper" mkObjective :: Objective -> IO (FunPtr Objective)
-foreign import ccall "minimize" boMinimize ::
+foreign import ccall "biteopt_minimize_c" boMinimize ::
     CInt -> FunPtr Objective -> Ptr () ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
