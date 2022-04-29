@@ -1,4 +1,4 @@
-module Numeric.Biteopt where
+module Numeric.Biteopt (minimize) where
 
 import Control.Monad
 import Data.Void
@@ -19,22 +19,24 @@ foreign import ccall "biteopt_minimize_c" boMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
-oo :: ([Double] -> Double) -> Objective
-oo objective n x d = do
-    xs <- peekArray (fromIntegral n) x
-    return $ coerce $ objective $ coerce xs
-
-minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
-minimize rng bounds objective = do
-    rf <- case rng of
-        Just xs -> do
+rng :: Maybe [Word32] -> IO (FunPtr BiteRnd)
+rng Nothing = return nullFunPtr
+rng (Just xs) = do
             rd <- newIORef xs
             let f = const $ do
                     x : xs <- readIORef rd
                     writeIORef rd xs
                     return (coerce x :: CUInt)
             rngPtr f
-        Nothing -> return nullFunPtr
+
+oo :: ([Double] -> Double) -> Objective
+oo objective n x d = do
+    xs <- peekArray (fromIntegral n) x
+    return $ coerce $ objective $ coerce xs
+
+minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
+minimize r bounds objective = do
+    rf <- rng r
     let dimensions = length bounds
     obj <- objPtr $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
