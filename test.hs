@@ -12,4 +12,7 @@ rng :: Word64 -> [Word32]
 rng = unfoldr (Just . nextWord32) . mkSMGen
 
 main :: IO ()
-main = minimize (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock >>= print
+main = do
+    result <- minimize' (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
+    putStrLn $ unlines $ show <$> result
+    --print result
