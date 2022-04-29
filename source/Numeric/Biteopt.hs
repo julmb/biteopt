@@ -30,12 +30,14 @@ withWrapper wrapper f = ContT $ \ action -> do
 rng :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
 rng Nothing = return nullFunPtr
 rng (Just xs) = do
-            rd <- lift $ newIORef xs
-            let f = const $ do
-                    x : xs <- readIORef rd
-                    writeIORef rd xs
-                    return (coerce x :: CUInt)
-            withWrapper rngWrapper f
+    rd <- lift $ newIORef xs
+    withWrapper rngWrapper $ const $ next rd
+
+next :: IORef [Word32] -> IO CUInt
+next r = do
+    x : xs <- readIORef r
+    writeIORef r xs
+    return $ coerce x
 
 oo :: ([Double] -> Double) -> Objective
 oo objective n x d = do
