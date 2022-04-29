@@ -23,13 +23,10 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
-data Opt
-foreign import ccall "minimize_new" minimizeNew :: CInt -> FunPtr BiteObj -> Ptr CDouble -> Ptr CDouble -> CInt -> IO (Ptr Opt)
-foreign import ccall "minimize_init" minimizeInit :: Ptr Opt -> Ptr Rnd -> IO ()
-foreign import ccall "minimize_step" minimizeStep :: Ptr Opt -> Ptr Rnd -> Ptr CDouble -> IO ()
-
-data Rnd
-foreign import ccall "rng_new" rngNew :: FunPtr BiteRnd -> IO (Ptr Rnd)
+data Min
+foreign import ccall "minimize_new" minimizeNew :: CInt -> FunPtr BiteObj -> Ptr CDouble -> Ptr CDouble -> CInt -> FunPtr BiteRnd -> IO (Ptr Min)
+foreign import ccall "minimize_step" minimizeStep :: Ptr Min -> IO Int
+foreign import ccall "minimize_best" minimizeBest :: Ptr Min -> Ptr CDouble -> IO ()
 
 biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
 biteObj f = withWrapper objWrapper eval where
@@ -44,10 +41,11 @@ biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
         writeIORef r xs
         return $ coerce x
 
-get :: Int -> Ptr Opt -> Ptr Rnd -> ContT r IO [Double]
-get n pm pr = do
+get :: Int -> Ptr Min -> ContT r IO [Double]
+get n pm = do
+    lift $ minimizeStep pm
     px <- ContT $ allocaArray n
-    lift $ minimizeStep pm pr px
+    lift $ minimizeBest pm px
     xs <- lift $ peekArray n px
     return $ coerce xs
 
@@ -58,11 +56,9 @@ minimize' rng bounds objective = flip runContT return $ do
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- lift $ minimizeNew (fromIntegral dimensions) po pbl pbu 1
     pr <- maybe (return nullFunPtr) biteRnd rng
-    pr <- lift $ rngNew pr
-    lift $ minimizeInit pm pr
-    replicateM 700 $ get dimensions pm pr
+    pm <- lift $ minimizeNew (fromIntegral dimensions) po pbl pbu 1 pr
+    replicateM 100 $ get dimensions pm
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do

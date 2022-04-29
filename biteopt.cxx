@@ -1,38 +1,44 @@
 #include "biteopt/biteopt.h"
 
+// TODO: public inheritance?
+// TODO: const modifiers?
+class Minimize : CBiteOptMinimize
+{
+	CBiteRnd rnd;
+
+	public: Minimize(int N, biteopt_func f, double* lb, double* ub, int M, biteopt_rng rf)
+	{
+		this->N = N;
+		this->f = f;
+		this->lb = lb;
+		this->ub = ub;
+		
+		updateDims(N, M);
+
+		// TODO: try seed = 0
+		rnd.init(1, rf);
+
+		init(rnd);
+	}
+
+	public: int step() { return optimize(rnd); }
+	public: void best(double* x) { memcpy(x, getBestParams(), N * sizeof(double)); }
+};
+
 // TOOD: expose all parameters
 // TODO: skip steps without position change
 
-extern "C" CBiteOptMinimize* minimize_new(const int N, const biteopt_func f, const double* lb, const double* ub, const int M)
+extern "C" Minimize* minimize_new(int N, biteopt_func f, double* lb, double* ub, int M, biteopt_rng rf)
 {
-	CBiteOptMinimize* opt = new CBiteOptMinimize();
-	opt->N = N;
-	opt->f = f;
-	opt->lb = lb;
-	opt->ub = ub;
-
-	opt->updateDims(N, M);
-
-	return opt;
+	return new Minimize(N, f, lb, ub, M, rf);
 }
-extern "C" void minimize_init(CBiteOptMinimize* opt, CBiteRnd* rnd)
+extern "C" int minimize_step(Minimize* minimize)
 {
-	opt->init(*rnd);
+	return minimize->step();
 }
-extern "C" void minimize_step(CBiteOptMinimize* opt, CBiteRnd* rnd, double* x)
+extern "C" void minimize_best(Minimize* minimize, double* x)
 {
-	opt->optimize(*rnd);
-
-	memcpy(x, opt->getBestParams(), opt->N * sizeof(double));
-}
-
-extern "C" CBiteRnd* rng_new(const biteopt_rng rf)
-{
-	CBiteRnd* rnd = new CBiteRnd();
-
-	rnd->init(1, rf);
-
-	return rnd;
+	minimize->best(x);
 }
 
 extern "C" int biteopt_minimize_wrapper(const int N, biteopt_func f, void* data,
