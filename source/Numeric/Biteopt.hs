@@ -27,15 +27,15 @@ withWrapper wrapper f = ContT $ \ action -> do
     freeHaskellFunPtr p
     return result
 
-rng :: Maybe [Word32] -> IO (FunPtr BiteRnd)
+rng :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
 rng Nothing = return nullFunPtr
 rng (Just xs) = do
-            rd <- newIORef xs
+            rd <- lift $ newIORef xs
             let f = const $ do
                     x : xs <- readIORef rd
                     writeIORef rd xs
                     return (coerce x :: CUInt)
-            rngWrapper f
+            lift $ rngWrapper f
 
 oo :: ([Double] -> Double) -> Objective
 oo objective n x d = do
@@ -44,7 +44,7 @@ oo objective n x d = do
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize r bounds objective = flip runContT return $ do
-    rf <- lift $ rng r
+    rf <- rng r
     let dimensions = length bounds
     obj <- withWrapper objWrapper $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
