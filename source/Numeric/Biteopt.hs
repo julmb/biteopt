@@ -7,6 +7,7 @@ import Data.Coerce
 import Data.IORef
 import Foreign
 import Foreign.C
+import Foreign.Utilities
 
 type Objective = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
 foreign import ccall "wrapper" objectiveWrapper :: Objective -> IO (FunPtr Objective)
@@ -19,13 +20,6 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
-
-withWrapper :: (a -> IO (FunPtr a)) -> a -> ContT r IO (FunPtr a)
-withWrapper wrapper f = ContT $ \ action -> do
-    p <- wrapper f
-    result <- action p
-    freeHaskellFunPtr p
-    return result
 
 rng :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
 rng Nothing = return nullFunPtr
