@@ -1,0 +1,3 @@
+[submodule "biteopt"]
+	path = biteopt
+	url = https://github.com/avaneev/biteopt
