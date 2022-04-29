@@ -9,14 +9,14 @@ import Foreign
 import Foreign.C
 import Foreign.Utilities
 
-type Objective = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
-foreign import ccall "wrapper" objectiveWrapper :: Wrapper Objective
+type BiteObj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
+foreign import ccall "wrapper" objectiveWrapper :: Wrapper BiteObj
 
 type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper BiteRnd
 
 foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
-    CInt -> FunPtr Objective -> Ptr Void ->
+    CInt -> FunPtr BiteObj -> Ptr Void ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
@@ -31,7 +31,7 @@ next r = const $ do
     writeIORef r xs
     return $ coerce x
 
-oo :: ([Double] -> Double) -> Objective
+oo :: ([Double] -> Double) -> BiteObj
 oo objective n p = const $ do
     xs <- peekArray (fromIntegral n) p
     return $ coerce $ objective $ coerce xs
