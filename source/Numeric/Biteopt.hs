@@ -39,14 +39,14 @@ biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
     let dimensions = length bounds
-    obj <- biteObj objective
-    let (lbl, ubl) = unzip $ coerce bounds
-    lba <- ContT $ withArray lbl
-    uba <- ContT $ withArray ubl
-    x <- ContT $ allocaArray dimensions
-    fx <- ContT alloca
-    r <- maybe (return nullFunPtr) biteRnd rng
-    c <- lift $ biteoptMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 r nullPtr
-    xs <- lift $ peekArray dimensions x
-    a <- lift $ peek fx
-    return (coerce xs, coerce a, c)
+    po <- biteObj objective
+    let (boundLower, boundUpper) = unzip $ coerce bounds
+    pbl <- ContT $ withArray boundLower
+    pbu <- ContT $ withArray boundUpper
+    px <- ContT $ allocaArray dimensions
+    py <- ContT alloca
+    pr <- maybe (return nullFunPtr) biteRnd rng
+    n <- lift $ biteoptMinimize (fromIntegral dimensions) po nullPtr pbl pbu px py 20000 1 1 1 pr nullPtr
+    x <- lift $ peekArray dimensions px
+    y <- lift $ peek py
+    return (coerce x, coerce y, n)
