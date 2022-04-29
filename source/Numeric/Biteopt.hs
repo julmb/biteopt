@@ -46,7 +46,7 @@ minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO (
 minimize r bounds objective = flip runContT return $ do
     rf <- lift $ rng r
     let dimensions = length bounds
-    obj <- lift $ objPtr $ oo objective
+    obj <- withWrapper objPtr $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
     x <- ContT $ allocaArray dimensions
     fx <- ContT alloca
@@ -56,5 +56,4 @@ minimize r bounds objective = flip runContT return $ do
     xs <- lift $ peekArray dimensions x
     a <- lift $ peek fx
     when (rf /= nullFunPtr) $ lift $ freeHaskellFunPtr rf
-    lift $ freeHaskellFunPtr obj
     return (coerce xs, coerce a, c)
