@@ -1,6 +1,7 @@
 module Numeric.Biteopt (minimize) where
 
 import Control.Monad
+import Control.Monad.Cont
 import Data.Void
 import Data.Coerce
 import Data.IORef
@@ -35,19 +36,18 @@ oo objective n x d = do
     return $ coerce $ objective $ coerce xs
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
-minimize r bounds objective = do
-    rf <- rng r
+minimize r bounds objective = flip runContT return $ do
+    rf <- lift $ rng r
     let dimensions = length bounds
-    obj <- objPtr $ oo objective
+    obj <- lift $ objPtr $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
-    (c, x, fx) <- allocaArray dimensions $ \ x ->
-        alloca $ \ fx ->
-            withArray lbl $ \ lba ->
-                withArray ubl $ \ uba -> do
-                    c <- boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
-                    xs <- peekArray dimensions x
-                    a <- peek fx
-                    return (c, xs, a)
-    when (rf /= nullFunPtr) $ freeHaskellFunPtr rf
-    freeHaskellFunPtr obj
-    return (coerce x, coerce fx, c)
+    x <- ContT $ allocaArray dimensions
+    fx <- ContT alloca
+    lba <- ContT $ withArray lbl
+    uba <- ContT $ withArray ubl
+    c <- lift $ boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
+    xs <- lift $ peekArray dimensions x
+    a <- lift $ peek fx
+    when (rf /= nullFunPtr) $ lift $ freeHaskellFunPtr rf
+    lift $ freeHaskellFunPtr obj
+    return (coerce xs, coerce a, c)

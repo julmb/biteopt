@@ -14,7 +14,7 @@ library
   hs-source-dirs:      source
   cxx-sources:         biteopt.cxx
   exposed-modules:     Numeric.Biteopt
-  build-depends:       base
+  build-depends:       base, mtl
 
 executable test
   import:              configuration
