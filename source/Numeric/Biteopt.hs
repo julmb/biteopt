@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Numeric.Biteopt (minimize) where
 
 import Control.Monad
@@ -21,10 +23,11 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
-biteObj :: ([Double] -> Double) -> BiteObj
-biteObj objective n p = const $ do
-    xs <- peekArray (fromIntegral n) p
-    return $ coerce $ objective $ coerce xs
+biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
+biteObj objective = withWrapper objWrapper eval where
+    eval n p = const $ do
+        xs <- peekArray (fromIntegral n) p
+        return $ coerce $ objective $ coerce xs
 
 biteRnd :: [Word32] -> ContT r IO (FunPtr BiteRnd)
 biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
@@ -36,7 +39,7 @@ biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
     let dimensions = length bounds
-    obj <- withWrapper objWrapper $ biteObj objective
+    obj <- biteObj objective
     let (lbl, ubl) = unzip $ coerce bounds
     lba <- ContT $ withArray lbl
     uba <- ContT $ withArray ubl
