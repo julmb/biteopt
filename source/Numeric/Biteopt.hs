@@ -24,10 +24,10 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
 biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
-biteObj objective = withWrapper objWrapper eval where
+biteObj f = withWrapper objWrapper eval where
     eval n p = const $ do
         xs <- peekArray (fromIntegral n) p
-        return $ coerce $ objective $ coerce xs
+        return $ coerce $ f $ coerce xs
 
 biteRnd :: [Word32] -> ContT r IO (FunPtr BiteRnd)
 biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
