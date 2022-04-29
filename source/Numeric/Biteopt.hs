@@ -21,15 +21,12 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
-withBiteRnd :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
-withBiteRnd Nothing = return nullFunPtr
-withBiteRnd (Just xs) = lift (newIORef xs) >>= withWrapper rngWrapper . next
-
-next :: IORef [Word32] -> BiteRnd
-next r = const $ do
-    x : xs <- readIORef r
-    writeIORef r xs
-    return $ coerce x
+biteRnd :: [Word32] -> ContT r IO (FunPtr BiteRnd)
+biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
+    next r = const $ do
+        x : xs <- readIORef r
+        writeIORef r xs
+        return $ coerce x
 
 oo :: ([Double] -> Double) -> BiteObj
 oo objective n p = const $ do
@@ -45,7 +42,7 @@ minimize rng bounds objective = flip runContT return $ do
     uba <- ContT $ withArray ubl
     x <- ContT $ allocaArray dimensions
     fx <- ContT alloca
-    r <- withBiteRnd rng
+    r <- maybe (return nullFunPtr) biteRnd rng
     c <- lift $ biteoptMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 r nullPtr
     xs <- lift $ peekArray dimensions x
     a <- lift $ peek fx
