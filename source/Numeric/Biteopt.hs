@@ -21,9 +21,9 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
-rng :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
-rng Nothing = return nullFunPtr
-rng (Just xs) = lift (newIORef xs) >>= withWrapper rngWrapper . next
+withBiteRnd :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
+withBiteRnd Nothing = return nullFunPtr
+withBiteRnd (Just xs) = lift (newIORef xs) >>= withWrapper rngWrapper . next
 
 next :: IORef [Word32] -> BiteRnd
 next r = const $ do
@@ -37,7 +37,7 @@ oo objective n p = const $ do
     return $ coerce $ objective $ coerce xs
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
-minimize r bounds objective = flip runContT return $ do
+minimize rng bounds objective = flip runContT return $ do
     let dimensions = length bounds
     obj <- withWrapper objWrapper $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
@@ -45,8 +45,8 @@ minimize r bounds objective = flip runContT return $ do
     uba <- ContT $ withArray ubl
     x <- ContT $ allocaArray dimensions
     fx <- ContT alloca
-    rf <- rng r
-    c <- lift $ biteoptMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
+    r <- withBiteRnd rng
+    c <- lift $ biteoptMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 r nullPtr
     xs <- lift $ peekArray dimensions x
     a <- lift $ peek fx
     return (coerce xs, coerce a, c)
