@@ -14,7 +14,7 @@ foreign import ccall "wrapper" objectiveWrapper :: Objective -> IO (FunPtr Objec
 type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: BiteRnd -> IO (FunPtr BiteRnd)
 
-foreign import ccall "biteopt_minimize_c" boMinimize ::
+foreign import ccall "biteopt_minimize_wrapper" boMinimize ::
     CInt -> FunPtr Objective -> Ptr Void ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
