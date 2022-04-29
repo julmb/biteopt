@@ -9,7 +9,7 @@ import Foreign
 import Foreign.C
 
 type Objective = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
-foreign import ccall "wrapper" objWrapper :: Objective -> IO (FunPtr Objective)
+foreign import ccall "wrapper" objectiveWrapper :: Objective -> IO (FunPtr Objective)
 
 type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: BiteRnd -> IO (FunPtr BiteRnd)
@@ -46,7 +46,7 @@ minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO (
 minimize r bounds objective = flip runContT return $ do
     rf <- rng r
     let dimensions = length bounds
-    obj <- withWrapper objWrapper $ oo objective
+    obj <- withWrapper objectiveWrapper $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
     x <- ContT $ allocaArray dimensions
     fx <- ContT alloca
