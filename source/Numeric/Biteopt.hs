@@ -20,6 +20,13 @@ foreign import ccall "biteopt_minimize_c" boMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
+withWrapper :: (a -> IO (FunPtr a)) -> a -> ContT r IO (FunPtr a)
+withWrapper wrapper f = ContT $ \ action -> do
+    p <- wrapper f
+    result <- action p
+    freeHaskellFunPtr p
+    return result
+
 rng :: Maybe [Word32] -> IO (FunPtr BiteRnd)
 rng Nothing = return nullFunPtr
 rng (Just xs) = do
