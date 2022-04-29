@@ -1,9 +1,11 @@
-module Foreign.Utilities (withWrapper) where
+module Foreign.Utilities (Wrapper, withWrapper) where
 
 import Control.Monad.Cont
 import Foreign
 
-withWrapper :: (a -> IO (FunPtr a)) -> a -> ContT r IO (FunPtr a)
+type Wrapper a = a -> IO (FunPtr a)
+
+withWrapper :: Wrapper a -> a -> ContT r IO (FunPtr a)
 withWrapper wrapper f = ContT $ \ action -> do
     p <- wrapper f
     result <- action p
