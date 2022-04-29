@@ -1,5 +1,6 @@
 module Numeric.Biteopt where
 
+import Control.Monad
 import Data.Void
 import Data.Coerce
 import Data.IORef
@@ -45,5 +46,6 @@ minimize rng bounds objective = do
                     xs <- peekArray dimensions x
                     a <- peek fx
                     return (c, xs, a)
+    when (rf /= nullFunPtr) $ freeHaskellFunPtr rf
     freeHaskellFunPtr obj
     return (coerce x, coerce fx, c)
