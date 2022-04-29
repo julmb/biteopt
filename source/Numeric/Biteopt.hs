@@ -5,14 +5,14 @@ import Foreign
 import Foreign.C
 
 type Objective = CInt -> Ptr CDouble -> Ptr () -> IO CDouble
-type RNG = Ptr () -> IO CUInt
+type BiteRnd = Ptr () -> IO CUInt
 
 foreign import ccall "wrapper" mkObjective :: Objective -> IO (FunPtr Objective)
 foreign import ccall "minimize" boMinimize ::
     CInt -> FunPtr Objective -> Ptr () ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
-    CInt -> FunPtr RNG -> Ptr () -> IO CInt
+    CInt -> FunPtr BiteRnd -> Ptr () -> IO CInt
 
 oo :: ([Double] -> Double) -> Objective
 oo objective n x d = do
