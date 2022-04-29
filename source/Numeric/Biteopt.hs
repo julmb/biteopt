@@ -61,9 +61,7 @@ minimize' rng bounds objective = flip runContT return $ do
     pr <- maybe (return nullFunPtr) biteRnd rng
     pr <- lift $ rngNew pr
     lift $ minimizeInit pm pr
-    let a = get dimensions pm pr
-    let b = replicateM 100 a
-    b
+    replicateM 700 $ get dimensions pm pr
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
