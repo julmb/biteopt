@@ -1,17 +1,8 @@
 module Main where
 
-import Foreign
+import Numeric.Biteopt
 import Foreign.C
-
-type Objective = CInt -> Ptr CDouble -> Ptr () -> IO CDouble
-type RNG = Ptr () -> IO CUInt
-
-foreign import ccall "wrapper" mkObjective :: Objective -> IO (FunPtr Objective)
-foreign import ccall "minimize" minimize ::
-    CInt -> FunPtr Objective -> Ptr () ->
-    Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
-    CInt -> CInt -> CInt ->
-    CInt -> FunPtr RNG -> Ptr () -> IO CInt
+import Foreign
 
 test :: Num a => [a] -> a
 test xy = (a - x) ^ 2 + b * (y - x ^ 2) ^ 2 where [x, y] = xy; a = 1; b = 100

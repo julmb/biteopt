@@ -9,11 +9,15 @@ common configuration
   default-language:    Haskell2010
   ghc-options:         -O2 -fllvm -Wno-unsupported-llvm-version -pgmlg++
 
---library
+library
+  import:              configuration
+  hs-source-dirs:      source
+  exposed-modules:     Numeric.Biteopt
+  cxx-sources:         biteopt.cxx
+  build-depends:       base
 
 executable test
   import:              configuration
   hs-source-dirs:      source
   main-is:             test.hs
-  cxx-sources:         biteopt.cxx
-  build-depends:       base
+  build-depends:       base, biteopt
