@@ -8,7 +8,8 @@ import Foreign.C
 type Objective = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
 type BiteRnd = Ptr Void -> IO CUInt
 
-foreign import ccall "wrapper" mkObjective :: Objective -> IO (FunPtr Objective)
+foreign import ccall "wrapper" objPtr :: Objective -> IO (FunPtr Objective)
+foreign import ccall "wrapper" rngPtr :: BiteRnd -> IO (FunPtr BiteRnd)
 foreign import ccall "biteopt_minimize_c" boMinimize ::
     CInt -> FunPtr Objective -> Ptr Void ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
@@ -23,7 +24,7 @@ oo objective n x d = do
 minimize :: [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize bounds objective = do
     let dimensions = length bounds
-    obj <- mkObjective $ oo objective
+    obj <- objPtr $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
     (c, x, fx) <- allocaArray dimensions $ \ x ->
         alloca $ \ fx ->
