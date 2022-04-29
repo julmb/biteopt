@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Numeric.Biteopt (minimize) where
+module Numeric.Biteopt (minimize, minimize') where
 
 import Control.Monad
 import Control.Monad.Cont
@@ -23,6 +23,13 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
+data Opt
+data Rnd
+foreign import ccall "minimize_new" minimizeNew :: CInt -> FunPtr BiteObj -> Ptr CDouble -> Ptr CDouble -> CInt -> IO (Ptr Opt)
+foreign import ccall "minimize_init" minimizeInit :: Ptr Opt -> Ptr Rnd -> IO ()
+foreign import ccall "minimize_step" minimizeStep :: Ptr Opt -> Ptr Rnd -> Ptr CDouble -> IO ()
+foreign import ccall "rng_new" rngNew :: FunPtr BiteRnd -> IO (Ptr Rnd)
+
 biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
 biteObj f = withWrapper objWrapper eval where
     eval n p = const $ do
@@ -35,6 +42,28 @@ biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
         x : xs <- readIORef r
         writeIORef r xs
         return $ coerce x
+
+get :: Int -> Ptr Opt -> Ptr Rnd -> ContT r IO [Double]
+get n pm pr = do
+    px <- ContT $ allocaArray n
+    lift $ minimizeStep pm pr px
+    xs <- lift $ peekArray n px
+    return $ coerce xs
+
+minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO [[Double]]
+minimize' rng bounds objective = flip runContT return $ do
+    let dimensions = length bounds
+    po <- biteObj objective
+    let (boundLower, boundUpper) = unzip $ coerce bounds
+    pbl <- ContT $ withArray boundLower
+    pbu <- ContT $ withArray boundUpper
+    pm <- lift $ minimizeNew (fromIntegral dimensions) po pbl pbu 1
+    pr <- maybe (return nullFunPtr) biteRnd rng
+    pr <- lift $ rngNew pr
+    lift $ minimizeInit pm pr
+    let a = get dimensions pm pr
+    let b = replicateM 100 a
+    b
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
