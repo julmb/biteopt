@@ -1,5 +1,8 @@
 #include "biteopt/biteopt.h"
 
+// TOOD: expose all parameters
+// TODO: skip steps without position change
+
 extern "C" CBiteOptMinimize* minimize_new(const int N, const biteopt_func f, const double* lb, const double* ub, const int M)
 {
 	CBiteOptMinimize* opt = new CBiteOptMinimize();
@@ -8,7 +11,6 @@ extern "C" CBiteOptMinimize* minimize_new(const int N, const biteopt_func f, con
 	opt->lb = lb;
 	opt->ub = ub;
 
-	// TODO: expose third parameter?
 	opt->updateDims(N, M);
 
 	return opt;
