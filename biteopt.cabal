@@ -12,8 +12,8 @@ common configuration
 library
   import:              configuration
   hs-source-dirs:      source
-  exposed-modules:     Numeric.Biteopt
   cxx-sources:         biteopt.cxx
+  exposed-modules:     Numeric.Biteopt
   build-depends:       base
 
 executable test
