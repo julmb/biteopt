@@ -14,7 +14,7 @@ foreign import ccall "wrapper" objectiveWrapper :: Objective -> IO (FunPtr Objec
 type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: BiteRnd -> IO (FunPtr BiteRnd)
 
-foreign import ccall "biteopt_minimize_wrapper" boMinimize ::
+foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> FunPtr Objective -> Ptr Void ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
     CInt -> CInt -> CInt ->
@@ -52,7 +52,7 @@ minimize r bounds objective = flip runContT return $ do
     x <- ContT $ allocaArray dimensions
     fx <- ContT alloca
     rf <- rng r
-    c <- lift $ boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
+    c <- lift $ biteoptMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
     xs <- lift $ peekArray dimensions x
     a <- lift $ peek fx
     return (coerce xs, coerce a, c)
