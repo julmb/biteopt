@@ -29,19 +29,17 @@ withWrapper wrapper f = ContT $ \ action -> do
 
 rng :: Maybe [Word32] -> ContT r IO (FunPtr BiteRnd)
 rng Nothing = return nullFunPtr
-rng (Just xs) = do
-    rd <- lift $ newIORef xs
-    withWrapper rngWrapper $ const $ next rd
+rng (Just xs) = lift (newIORef xs) >>= withWrapper rngWrapper . next
 
-next :: IORef [Word32] -> IO CUInt
-next r = do
+next :: IORef [Word32] -> BiteRnd
+next r = const $ do
     x : xs <- readIORef r
     writeIORef r xs
     return $ coerce x
 
 oo :: ([Double] -> Double) -> Objective
-oo objective n x d = do
-    xs <- peekArray (fromIntegral n) x
+oo objective n p = const $ do
+    xs <- peekArray (fromIntegral n) p
     return $ coerce $ objective $ coerce xs
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
