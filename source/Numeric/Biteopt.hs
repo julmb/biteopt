@@ -44,14 +44,14 @@ oo objective n x d = do
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize r bounds objective = flip runContT return $ do
-    rf <- rng r
     let dimensions = length bounds
     obj <- withWrapper objectiveWrapper $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
-    x <- ContT $ allocaArray dimensions
-    fx <- ContT alloca
     lba <- ContT $ withArray lbl
     uba <- ContT $ withArray ubl
+    x <- ContT $ allocaArray dimensions
+    fx <- ContT alloca
+    rf <- rng r
     c <- lift $ boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
     xs <- lift $ peekArray dimensions x
     a <- lift $ peek fx
