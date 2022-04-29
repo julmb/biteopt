@@ -6,10 +6,11 @@ import Foreign
 import Foreign.C
 
 type Objective = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
-type BiteRnd = Ptr Void -> IO CUInt
-
 foreign import ccall "wrapper" objPtr :: Objective -> IO (FunPtr Objective)
+
+type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngPtr :: BiteRnd -> IO (FunPtr BiteRnd)
+
 foreign import ccall "biteopt_minimize_c" boMinimize ::
     CInt -> FunPtr Objective -> Ptr Void ->
     Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
