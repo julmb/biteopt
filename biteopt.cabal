@@ -19,4 +19,4 @@ library
 executable test
   import:              configuration
   main-is:             test.hs
-  build-depends:       base, biteopt
+  build-depends:       base, splitmix, biteopt

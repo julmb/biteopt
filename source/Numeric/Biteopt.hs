@@ -2,6 +2,7 @@ module Numeric.Biteopt where
 
 import Data.Void
 import Data.Coerce
+import Data.IORef
 import Foreign
 import Foreign.C
 
@@ -22,8 +23,17 @@ oo objective n x d = do
     xs <- peekArray (fromIntegral n) x
     return $ coerce $ objective $ coerce xs
 
-minimize :: [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
-minimize bounds objective = do
+minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
+minimize rng bounds objective = do
+    rf <- case rng of
+        Just xs -> do
+            rd <- newIORef xs
+            let f = const $ do
+                    x : xs <- readIORef rd
+                    writeIORef rd xs
+                    return (coerce x :: CUInt)
+            rngPtr f
+        Nothing -> return nullFunPtr
     let dimensions = length bounds
     obj <- objPtr $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
@@ -31,7 +41,7 @@ minimize bounds objective = do
         alloca $ \ fx ->
             withArray lbl $ \ lba ->
                 withArray ubl $ \ uba -> do
-                    c <- boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 nullFunPtr nullPtr
+                    c <- boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
                     xs <- peekArray dimensions x
                     a <- peek fx
                     return (c, xs, a)
