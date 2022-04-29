@@ -35,7 +35,7 @@ rng (Just xs) = do
                     x : xs <- readIORef rd
                     writeIORef rd xs
                     return (coerce x :: CUInt)
-            lift $ rngWrapper f
+            withWrapper rngWrapper f
 
 oo :: ([Double] -> Double) -> Objective
 oo objective n x d = do
@@ -55,5 +55,4 @@ minimize r bounds objective = flip runContT return $ do
     c <- lift $ boMinimize (fromIntegral dimensions) obj nullPtr lba uba x fx 20000 1 1 1 rf nullPtr
     xs <- lift $ peekArray dimensions x
     a <- lift $ peek fx
-    when (rf /= nullFunPtr) $ lift $ freeHaskellFunPtr rf
     return (coerce xs, coerce a, c)
