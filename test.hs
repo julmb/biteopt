@@ -19,5 +19,5 @@ ub = [2, 2]
 
 main :: IO ()
 main = do
-    result <- minimize 2 [(-2, 2), (-2, 2)] test
+    result <- minimize [(-2, 2), (-2, 2)] test
     print result

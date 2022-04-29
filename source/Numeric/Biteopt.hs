@@ -1,8 +1,8 @@
 module Numeric.Biteopt where
 
+import Data.Coerce
 import Foreign
 import Foreign.C
-import Data.Coerce
 
 type Objective = CInt -> Ptr CDouble -> Ptr () -> IO CDouble
 type RNG = Ptr () -> IO CUInt
@@ -19,8 +19,9 @@ oo objective n x d = do
     xs <- peekArray (fromIntegral n) x
     return $ coerce $ objective $ coerce xs
 
-minimize :: Int -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
-minimize dimensions bounds objective = do
+minimize :: [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
+minimize bounds objective = do
+    let dimensions = length bounds
     obj <- mkObjective $ oo objective
     let (lbl, ubl) = unzip $ coerce bounds
     (c, x, fx) <- allocaArray dimensions $ \ x ->
