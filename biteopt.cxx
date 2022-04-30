@@ -33,6 +33,10 @@ extern "C" Minimize* minimize_new(int N, biteopt_func f, double* lb, double* ub,
 {
 	return new Minimize(N, f, lb, ub, M, rf);
 }
+extern "C" void minimize_free(Minimize* minimize)
+{
+	delete minimize;
+}
 extern "C" int minimize_step(Minimize* minimize)
 {
 	return minimize->step();
