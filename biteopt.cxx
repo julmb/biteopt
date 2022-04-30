@@ -1,15 +1,17 @@
+#include <stdio.h>
+
 #include "biteopt/biteopt.h"
 
 // TODO: const modifiers?
 // TOOD: expose all parameters
 // TODO: skip steps without position change?
 
-extern "C" CBiteRnd* rnd_new() { return new CBiteRnd(); }
-extern "C" void rnd_free(CBiteRnd* rnd) { delete rnd; }
+extern "C" CBiteRnd* rnd_new() { printf("rnd_new\n"); return new CBiteRnd(); }
+extern "C" void rnd_free(CBiteRnd* rnd) { printf("rnd_free\n"); delete rnd; }
 extern "C" void rnd_init(CBiteRnd* rnd, int seed, biteopt_rng rf, void* rdata) { rnd->init(0, rf, rdata); }
 
-extern "C" CBiteOptMinimize* opt_new() { return new CBiteOptMinimize(); }
-extern "C" void opt_free(CBiteOptMinimize* opt) { delete opt; }
+extern "C" CBiteOptMinimize* opt_new() { printf("opt_new\n"); return new CBiteOptMinimize(); }
+extern "C" void opt_free(CBiteOptMinimize* opt) { printf("opt_free\n"); delete opt; }
 extern "C" void opt_set(CBiteOptMinimize* opt, int N, biteopt_func f, void* data, double* lb, double* ub)
 {
 	opt->N = N;
