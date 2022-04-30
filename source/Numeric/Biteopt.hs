@@ -75,7 +75,7 @@ minimize' rng bounds objective = flip runContT return $ do
     lift $ optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ optDims pm (fromIntegral dimensions) 1
     lift $ optInit pm pr
-    replicateM 600 $ get dimensions pm pr
+    replicateM 320 $ get dimensions pm pr
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
