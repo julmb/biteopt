@@ -18,7 +18,7 @@ foreign import ccall "wrapper" rngWrapper :: Wrapper BiteRnd
 
 data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
-foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
+foreign import ccall "&rnd_free" rndFree :: FunPtr (Ptr Rnd -> IO ())
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr BiteRnd -> Ptr Void -> IO ()
 
 type BiteObj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
@@ -26,7 +26,7 @@ foreign import ccall "wrapper" objWrapper :: Wrapper BiteObj
 
 data Opt
 foreign import ccall "opt_new" optNew :: IO (Ptr Opt)
-foreign import ccall "opt_free" optFree :: Ptr Opt -> IO ()
+foreign import ccall "&opt_free" optFree :: FunPtr (Ptr Opt -> IO ())
 foreign import ccall "opt_set" optSet :: Ptr Opt -> CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> IO ()
 foreign import ccall "opt_dims" optDims :: Ptr Opt -> CInt -> CInt -> IO ()
 foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
@@ -52,11 +52,11 @@ biteObj f = withWrapper $ objWrapper eval where
         xs <- peekArray (fromIntegral n) p
         return $ coerce $ f $ coerce xs
 
-get :: Int -> Ptr Opt -> Ptr Rnd -> ContT r IO [Double]
+get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> ContT r IO [Double]
 get n pm pr = do
-    lift $ optStep pm pr
+    lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optStep pm pr
     px <- ContT $ allocaArray n
-    lift $ optBest pm px
+    lift $ withForeignPtr pm $ \ pm -> optBest pm px
     xs <- lift $ peekArray n px
     return $ coerce xs
 
@@ -70,19 +70,19 @@ inf action = do
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO [[Double]]
 minimize' rng bounds objective = flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
-    pr <- lift rndNew
+    pr <- lift $ rndNew >>= newForeignPtr rndFree
     -- TODO: expose seed of integrated rng
-    lift $ rndInit pr 0 prf nullPtr
+    lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     -- TODO: fromIntegral here?
     let dimensions = length bounds
     po <- biteObj objective
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- lift optNew
-    lift $ optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
-    lift $ optDims pm (fromIntegral dimensions) 1
-    lift $ optInit pm pr
+    pm <- lift $ optNew >>= newForeignPtr optFree
+    lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
+    lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
+    lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
     lift $ inf $ flip runContT return $ get dimensions pm pr
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
