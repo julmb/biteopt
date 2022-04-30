@@ -22,7 +22,7 @@ extern "C" void opt_set(CBiteOptMinimize* opt, int N, biteopt_func f, void* data
 }
 extern "C" void opt_dims(CBiteOptMinimize* opt, int N, int M) { opt->updateDims(N, M); }
 extern "C" void opt_init(CBiteOptMinimize* opt, CBiteRnd* rnd) { opt->init(*rnd); }
-extern "C" int opt_step(CBiteOptMinimize* opt, CBiteRnd* rnd) { return opt->optimize(*rnd); }
+extern "C" int opt_step(CBiteOptMinimize* opt, CBiteRnd* rnd) { printf("opt_step\n"); return opt->optimize(*rnd); }
 // TODO: can we just return getBestParams? it gets copied in haskell anyways
 extern "C" void opt_best(CBiteOptMinimize* opt, double* x) { memcpy(x, opt->getBestParams(), opt->N * sizeof(double)); }
 
