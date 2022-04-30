@@ -10,6 +10,7 @@ class Minimize : CBiteOptMinimize
 	{
 		this->N = N;
 		this->f = f;
+		this->data = NULL;
 		this->lb = lb;
 		this->ub = ub;
 		
