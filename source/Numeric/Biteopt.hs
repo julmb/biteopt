@@ -23,14 +23,14 @@ foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr BiteRnd -> 
 type BiteObj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
 foreign import ccall "wrapper" objWrapper :: Wrapper BiteObj
 
-data Min
-foreign import ccall "opt_new" optNew :: IO (Ptr Min)
-foreign import ccall "opt_free" optFree :: Ptr Min -> IO ()
-foreign import ccall "opt_set" optSet :: Ptr Min -> CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> IO ()
-foreign import ccall "opt_dims" optDims :: Ptr Min -> CInt -> CInt -> IO ()
-foreign import ccall "opt_init" optInit :: Ptr Min -> Ptr Rnd -> IO ()
-foreign import ccall "opt_step" optStep :: Ptr Min -> Ptr Rnd -> IO CInt
-foreign import ccall "opt_best" optBest :: Ptr Min -> Ptr CDouble -> IO ()
+data Opt
+foreign import ccall "opt_new" optNew :: IO (Ptr Opt)
+foreign import ccall "opt_free" optFree :: Ptr Opt -> IO ()
+foreign import ccall "opt_set" optSet :: Ptr Opt -> CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> IO ()
+foreign import ccall "opt_dims" optDims :: Ptr Opt -> CInt -> CInt -> IO ()
+foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
+foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
+foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
 foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> FunPtr BiteObj -> Ptr Void ->
@@ -51,7 +51,7 @@ biteObj f = withWrapper $ objWrapper eval where
         xs <- peekArray (fromIntegral n) p
         return $ coerce $ f $ coerce xs
 
-get :: Int -> Ptr Min -> Ptr Rnd -> ContT r IO [Double]
+get :: Int -> Ptr Opt -> Ptr Rnd -> ContT r IO [Double]
 get n pm pr = do
     lift $ optStep pm pr
     px <- ContT $ allocaArray n
