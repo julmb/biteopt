@@ -16,8 +16,7 @@ class Minimize : CBiteOptMinimize
 		
 		updateDims(N, M);
 
-		// TODO: try seed = 0
-		rnd.init(1, rf);
+		rnd.init(0, rf);
 
 		init(rnd);
 	}
