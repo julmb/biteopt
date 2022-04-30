@@ -62,6 +62,7 @@ minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO 
 minimize' rng bounds objective = flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
     pr <- lift rndNew
+    -- TODO: expose seed of integrated rng
     lift $ rndInit pr 0 prf nullPtr
     -- TODO: fromIntegral here?
     let dimensions = length bounds
