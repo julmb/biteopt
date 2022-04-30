@@ -25,6 +25,7 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
 
 data Min
 foreign import ccall "minimize_new" minimizeNew :: CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> CInt -> FunPtr BiteRnd -> IO (Ptr Min)
+foreign import ccall "minimize_free" minimizeFree :: Ptr Min -> IO ()
 foreign import ccall "minimize_step" minimizeStep :: Ptr Min -> IO Int
 foreign import ccall "minimize_best" minimizeBest :: Ptr Min -> Ptr CDouble -> IO ()
 
@@ -58,7 +59,9 @@ minimize' rng bounds objective = flip runContT return $ do
     pbu <- ContT $ withArray boundUpper
     pr <- maybe (return nullFunPtr) biteRnd rng
     pm <- lift $ minimizeNew (fromIntegral dimensions) po nullPtr pbl pbu 1 pr
-    replicateM 100 $ get dimensions pm
+    result <- replicateM 100 $ get dimensions pm
+    lift $ minimizeFree pm
+    return result
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
