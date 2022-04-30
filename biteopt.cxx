@@ -1,6 +1,8 @@
 #include "biteopt/biteopt.h"
 
 // TODO: const modifiers?
+// TOOD: expose all parameters
+// TODO: skip steps without position change?
 
 extern "C" CBiteRnd* rnd_new() { return new CBiteRnd(); }
 extern "C" void rnd_free(CBiteRnd* rnd) { delete rnd; }
@@ -20,9 +22,6 @@ extern "C" void opt_dims(CBiteOptMinimize* opt, int N, int M) { opt->updateDims(
 extern "C" void opt_init(CBiteOptMinimize* opt, CBiteRnd* rnd) { opt->init(*rnd); }
 extern "C" int opt_step(CBiteOptMinimize* opt, CBiteRnd* rnd) { return opt->optimize(*rnd); }
 extern "C" void opt_best(CBiteOptMinimize* opt, double* x) { memcpy(x, opt->getBestParams(), opt->N * sizeof(double)); }
-
-// TOOD: expose all parameters
-// TODO: skip steps without position change
 
 extern "C" int biteopt_minimize_wrapper(const int N, biteopt_func f, void* data,
 	const double* lb, const double* ub, double* x, double* minf,
