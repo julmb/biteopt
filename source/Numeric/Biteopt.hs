@@ -2,6 +2,7 @@
 
 module Numeric.Biteopt (minimize, minimize') where
 
+import Control.Exception
 import Control.Monad
 import Control.Monad.Cont
 import Data.Void
@@ -61,7 +62,7 @@ get n pm pr = do
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO [[Double]]
 minimize' rng bounds objective = flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
-    pr <- lift rndNew
+    pr <- ContT $ bracket rndNew rndFree
     -- TODO: expose seed of integrated rng
     lift $ rndInit pr 0 prf nullPtr
     -- TODO: fromIntegral here?
@@ -70,14 +71,11 @@ minimize' rng bounds objective = flip runContT return $ do
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- lift optNew
+    pm <- ContT $ bracket optNew optFree
     lift $ optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ optDims pm (fromIntegral dimensions) 1
     lift $ optInit pm pr
-    result <- replicateM 600 $ get dimensions pm pr
-    lift $ optFree pm
-    lift $ rndFree pr
-    return result
+    replicateM 600 $ get dimensions pm pr
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
