@@ -24,10 +24,10 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
 data Min
-foreign import ccall "minimize_new" minimizeNew :: CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> CInt -> FunPtr BiteRnd -> IO (Ptr Min)
-foreign import ccall "minimize_free" minimizeFree :: Ptr Min -> IO ()
-foreign import ccall "minimize_step" minimizeStep :: Ptr Min -> IO Int
-foreign import ccall "minimize_best" minimizeBest :: Ptr Min -> Ptr CDouble -> IO ()
+foreign import ccall "minimizer_new" minimizerNew :: CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> CInt -> FunPtr BiteRnd -> IO (Ptr Min)
+foreign import ccall "minimizer_free" minimizerFree :: Ptr Min -> IO ()
+foreign import ccall "minimizer_step" minimizerStep :: Ptr Min -> IO Int
+foreign import ccall "minimizer_best" minimizerBest :: Ptr Min -> Ptr CDouble -> IO ()
 
 biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
 biteObj f = withWrapper objWrapper eval where
@@ -44,9 +44,9 @@ biteRnd xs = lift (newIORef xs) >>= withWrapper rngWrapper . next where
 
 get :: Int -> Ptr Min -> ContT r IO [Double]
 get n pm = do
-    lift $ minimizeStep pm
+    lift $ minimizerStep pm
     px <- ContT $ allocaArray n
-    lift $ minimizeBest pm px
+    lift $ minimizerBest pm px
     xs <- lift $ peekArray n px
     return $ coerce xs
 
@@ -58,9 +58,9 @@ minimize' rng bounds objective = flip runContT return $ do
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
     pr <- maybe (return nullFunPtr) biteRnd rng
-    pm <- lift $ minimizeNew (fromIntegral dimensions) po nullPtr pbl pbu 1 pr
+    pm <- lift $ minimizerNew (fromIntegral dimensions) po nullPtr pbl pbu 1 pr
     result <- replicateM 100 $ get dimensions pm
-    lift $ minimizeFree pm
+    lift $ minimizerFree pm
     return result
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)

@@ -2,11 +2,11 @@
 
 // TODO: public inheritance?
 // TODO: const modifiers?
-class Minimize : CBiteOptMinimize
+class Minimizer : CBiteOptMinimize
 {
 	CBiteRnd rnd;
 
-	public: Minimize(int N, biteopt_func f, void* data, double* lb, double* ub, int M, biteopt_rng rf)
+	public: Minimizer(int N, biteopt_func f, void* data, double* lb, double* ub, int M, biteopt_rng rf)
 	{
 		this->N = N;
 		this->f = f;
@@ -28,13 +28,13 @@ class Minimize : CBiteOptMinimize
 // TOOD: expose all parameters
 // TODO: skip steps without position change
 
-extern "C" Minimize* minimize_new(int N, biteopt_func f, void* data, double* lb, double* ub, int M, biteopt_rng rf)
+extern "C" Minimizer* minimizer_new(int N, biteopt_func f, void* data, double* lb, double* ub, int M, biteopt_rng rf)
 {
-	return new Minimize(N, f, data, lb, ub, M, rf);
+	return new Minimizer(N, f, data, lb, ub, M, rf);
 }
-extern "C" void minimize_free(Minimize* minimize) { delete minimize; }
-extern "C" int minimize_step(Minimize* minimize) { return minimize->step(); }
-extern "C" void minimize_best(Minimize* minimize, double* x) { minimize->best(x); }
+extern "C" void minimizer_free(Minimizer* minimizer) { delete minimizer; }
+extern "C" int minimizer_step(Minimizer* minimizer) { return minimizer->step(); }
+extern "C" void minimizer_best(Minimizer* minimizer, double* x) { minimizer->best(x); }
 
 extern "C" int biteopt_minimize_wrapper(const int N, biteopt_func f, void* data,
 	const double* lb, const double* ub, double* x, double* minf,
