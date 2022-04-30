@@ -6,11 +6,11 @@ class Minimize : CBiteOptMinimize
 {
 	CBiteRnd rnd;
 
-	public: Minimize(int N, biteopt_func f, double* lb, double* ub, int M, biteopt_rng rf)
+	public: Minimize(int N, biteopt_func f, void* data, double* lb, double* ub, int M, biteopt_rng rf)
 	{
 		this->N = N;
 		this->f = f;
-		this->data = NULL;
+		this->data = data;
 		this->lb = lb;
 		this->ub = ub;
 		
@@ -28,9 +28,9 @@ class Minimize : CBiteOptMinimize
 // TOOD: expose all parameters
 // TODO: skip steps without position change
 
-extern "C" Minimize* minimize_new(int N, biteopt_func f, double* lb, double* ub, int M, biteopt_rng rf)
+extern "C" Minimize* minimize_new(int N, biteopt_func f, void* data, double* lb, double* ub, int M, biteopt_rng rf)
 {
-	return new Minimize(N, f, lb, ub, M, rf);
+	return new Minimize(N, f, data, lb, ub, M, rf);
 }
 extern "C" void minimize_free(Minimize* minimize) { delete minimize; }
 extern "C" int minimize_step(Minimize* minimize) { return minimize->step(); }
