@@ -33,18 +33,9 @@ extern "C" Minimize* minimize_new(int N, biteopt_func f, double* lb, double* ub,
 {
 	return new Minimize(N, f, lb, ub, M, rf);
 }
-extern "C" void minimize_free(Minimize* minimize)
-{
-	delete minimize;
-}
-extern "C" int minimize_step(Minimize* minimize)
-{
-	return minimize->step();
-}
-extern "C" void minimize_best(Minimize* minimize, double* x)
-{
-	minimize->best(x);
-}
+extern "C" void minimize_free(Minimize* minimize) { delete minimize; }
+extern "C" int minimize_step(Minimize* minimize) { return minimize->step(); }
+extern "C" void minimize_best(Minimize* minimize, double* x) { minimize->best(x); }
 
 extern "C" int biteopt_minimize_wrapper(const int N, biteopt_func f, void* data,
 	const double* lb, const double* ub, double* x, double* minf,
