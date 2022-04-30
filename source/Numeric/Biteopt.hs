@@ -59,7 +59,7 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
--- TODO: if this returns an infinite list, the optimizer is never freed
+-- TODO: if this returns an infinite list, the optimizer is never freed (or maybe it just gets gced?)
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO [[Double]]
 minimize' rng bounds objective = flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
