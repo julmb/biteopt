@@ -14,5 +14,5 @@ rng = unfoldr (Just . nextWord32) . mkSMGen
 main :: IO ()
 main = do
     result <- minimize' (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
-    putStrLn $ unlines $ show <$> result
+    putStrLn $ unlines $ show <$> take 320 result
     --print result

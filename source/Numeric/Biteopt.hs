@@ -11,6 +11,7 @@ import Data.IORef
 import Foreign
 import Foreign.C
 import Foreign.Utilities
+import System.IO.Unsafe
 
 type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper BiteRnd
@@ -59,11 +60,17 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
+inf :: IO a -> IO [a]
+inf action = do
+    item <- action
+    rest <- unsafeInterleaveIO $ inf action
+    return $ item : rest
+
 -- TODO: if this returns an infinite list, the optimizer is never freed (or maybe it just gets gced?)
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO [[Double]]
 minimize' rng bounds objective = flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
-    pr <- ContT $ bracket rndNew rndFree
+    pr <- lift rndNew
     -- TODO: expose seed of integrated rng
     lift $ rndInit pr 0 prf nullPtr
     -- TODO: fromIntegral here?
@@ -72,11 +79,11 @@ minimize' rng bounds objective = flip runContT return $ do
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- ContT $ bracket optNew optFree
+    pm <- lift optNew
     lift $ optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ optDims pm (fromIntegral dimensions) 1
     lift $ optInit pm pr
-    replicateM 320 $ get dimensions pm pr
+    lift $ inf $ flip runContT return $ get dimensions pm pr
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
