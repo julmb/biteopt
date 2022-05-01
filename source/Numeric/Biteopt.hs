@@ -18,10 +18,25 @@ import Debug.Trace
 type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
+rng :: [Word32] -> IO (FunPtr Rng)
+rng xs = newIORef xs >>= rngWrapper . next where
+    next r = const $ do
+        x : xs <- readIORef r
+        writeIORef r xs
+        return $ coerce x
+
 data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
 foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr Rng -> Ptr Void -> IO ()
+
+rnd :: Maybe [Word32] -> IO (ForeignPtr Rnd)
+rnd gen = do
+    prf <- maybe (return nullFunPtr) rng gen
+    pr <- manage rndNew rndFree $ trace "rf_free" $ freeHaskellFunPtr prf
+    -- TODO: expose seed of integrated rng
+    withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
+    return pr
 
 type Obj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
 foreign import ccall "wrapper" objWrapper :: Wrapper Obj
@@ -41,13 +56,6 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr Rng -> Ptr Void -> IO CInt
 
-rng :: [Word32] -> IO (FunPtr Rng)
-rng xs = newIORef xs >>= rngWrapper . next where
-    next r = const $ do
-        x : xs <- readIORef r
-        writeIORef r xs
-        return $ coerce x
-
 biteObj :: ([Double] -> Double) -> IO (FunPtr Obj)
 biteObj f = objWrapper eval where
     eval n p = const $ do
@@ -61,14 +69,6 @@ get n pm pr = do
     lift $ withForeignPtr pm $ \ pm -> optBest pm px
     xs <- lift $ peekArray n px
     return $ coerce xs
-
-rnd :: Maybe [Word32] -> IO (ForeignPtr Rnd)
-rnd gen = do
-    prf <- maybe (return nullFunPtr) rng gen
-    pr <- manage rndNew rndFree $ trace "rf_free" $ freeHaskellFunPtr prf
-    -- TODO: expose seed of integrated rng
-    withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
-    return pr
 
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize' gen bounds objective = unsafePerformIO $ flip runContT return $ do
