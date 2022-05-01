@@ -67,8 +67,8 @@ inf action = do
     return $ item : rest
 
 -- TODO: if this returns an infinite list, the optimizer is never freed (or maybe it just gets gced?)
-minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO [[Double]]
-minimize' rng bounds objective = flip runContT return $ do
+minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
+minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
     pr <- lift $ rndNew >>= newForeignPtr rndFree
     -- TODO: expose seed of integrated rng

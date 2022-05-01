@@ -12,14 +12,12 @@ rosenbrock xy = (a - x) ^ 2 + b * (y - x ^ 2) ^ 2 where [x, y] = xy; a = 1; b = 
 rng :: Word64 -> [Word32]
 rng = unfoldr (Just . nextWord32) . mkSMGen
 
-get :: IO [[Double]]
-get = do
-    result <- minimize' (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
-    return $ take 320 result
+get :: [[Double]]
+get = take 320 $ minimize' (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
 
 main :: IO ()
 main = do
-    result <- get
+    let result = get
     putStrLn $ unlines $ show <$> result
     performGC
     performGC
