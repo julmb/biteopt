@@ -40,6 +40,9 @@ rnd (Right source) = do
 type Obj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
 foreign import ccall "wrapper" objWrapper :: Wrapper Obj
 
+obj :: ([Double] -> Double) -> Obj
+obj f n p = const $ coerce f <$> peekArray (fromIntegral n) p
+
 data Opt
 foreign import ccall "opt_new" optNew :: IO (Ptr Opt)
 foreign import ccall "opt_free" optFree :: Ptr Opt -> IO ()
@@ -48,9 +51,6 @@ foreign import ccall "opt_dims" optDims :: Ptr Opt -> CInt -> CInt -> IO ()
 foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
-
-obj :: ([Double] -> Double) -> Obj
-obj f n p = const $ coerce f <$> peekArray (fromIntegral n) p
 
 get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> ContT r IO [Double]
 get n pm pr = do
