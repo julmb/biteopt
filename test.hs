@@ -1,5 +1,6 @@
 module Main where
 
+import Control.Concurrent
 import Data.List
 import Data.Word
 import System.Mem
@@ -20,6 +21,6 @@ main = do
     let result = get
     putStrLn $ unlines $ show <$> result
     performGC
-    performGC
+    threadDelay 1000
     putStrLn $ unlines $ show <$> take 2 result
     --print result

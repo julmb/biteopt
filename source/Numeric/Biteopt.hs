@@ -18,7 +18,7 @@ foreign import ccall "wrapper" rngWrapper :: Wrapper BiteRnd
 
 data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
-foreign import ccall "&rnd_free" rndFree :: FunPtr (Ptr Rnd -> IO ())
+foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr BiteRnd -> Ptr Void -> IO ()
 
 type BiteObj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
@@ -26,7 +26,7 @@ foreign import ccall "wrapper" objWrapper :: Wrapper BiteObj
 
 data Opt
 foreign import ccall "opt_new" optNew :: IO (Ptr Opt)
-foreign import ccall "&opt_free" optFree :: FunPtr (Ptr Opt -> IO ())
+foreign import ccall "opt_free" optFree :: Ptr Opt -> IO ()
 foreign import ccall "opt_set" optSet :: Ptr Opt -> CInt -> FunPtr BiteObj -> Ptr Void -> Ptr CDouble -> Ptr CDouble -> IO ()
 foreign import ccall "opt_dims" optDims :: Ptr Opt -> CInt -> CInt -> IO ()
 foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
@@ -63,7 +63,7 @@ get n pm pr = do
 mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
 mkRng rng = do
     prf <- maybe (return nullFunPtr) biteRnd rng
-    pr <- lift $ rndNew >>= newForeignPtr rndFree
+    pr <- lift $ rndNew >>= newForeignPtr' rndFree
     -- TODO: expose seed of integrated rng
     lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
@@ -77,7 +77,7 @@ minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- lift $ optNew >>= newForeignPtr optFree
+    pm <- lift $ optNew >>= newForeignPtr' optFree
     lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
