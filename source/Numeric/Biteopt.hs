@@ -10,6 +10,8 @@ import Foreign
 import Foreign.C
 import Foreign.Utilities
 
+data RandomSource = Internal Int32 | Sequence [Word32]
+
 type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
@@ -20,8 +22,6 @@ data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
 foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr Rng -> Ptr Void -> IO ()
-
-data RandomSource = Internal Int32 | Sequence [Word32]
 
 rnd :: RandomSource -> IO (ForeignPtr Rnd)
 rnd (Internal seed) = do
