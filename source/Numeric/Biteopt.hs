@@ -76,9 +76,9 @@ step pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> void $ optS
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
+    let n = length bounds
     pr <- rnd gen
     pm <- opt bounds objective
-    inita pm pr
-    x <- best (length bounds) pm
-    xs <- repeatIO $ step pm pr >> best (length bounds) pm
+    x <- inita pm pr >> best n pm
+    xs <- repeatIO $ step pm pr >> best n pm
     return $ x : xs
