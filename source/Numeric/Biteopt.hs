@@ -19,7 +19,7 @@ type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
 rng :: [Word32] -> IO Rng
-rng xs = next <$> newIORef xs where
+rng = fmap next . newIORef where
     next r = const $ do
         x : xs <- readIORef r
         writeIORef r xs
