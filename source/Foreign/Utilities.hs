@@ -1,4 +1,4 @@
-module Foreign.Utilities (repeatIO, Wrapper, newForeignPtr') where
+module Foreign.Utilities (repeatIO, Wrapper, manage) where
 
 import Control.Exception
 import Control.Monad.Cont
@@ -11,8 +11,8 @@ repeatIO m = go where go = unsafeInterleaveIO $ liftM2 (:) m go
 
 type Wrapper a = a -> IO (FunPtr a)
 
-newForeignPtr' :: IO (Ptr a) -> (Ptr a -> IO ()) -> IO () -> IO (ForeignPtr a)
-newForeignPtr' new free finalize = do
+manage :: IO (Ptr a) -> (Ptr a -> IO ()) -> IO () -> IO (ForeignPtr a)
+manage new free finalize = do
     p <- new
     pf <- newForeignPtr_ p
     Foreign.Concurrent.addForeignPtrFinalizer pf finalize
