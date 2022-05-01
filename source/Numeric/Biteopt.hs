@@ -52,14 +52,14 @@ foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
 opt :: ForeignPtr Rnd -> [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
 opt pr bounds objective = flip runContT return $ do
-    let dimensions = fromIntegral $ length bounds
+    let n = fromIntegral $ length bounds
     po <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = coerce $ unzip bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
     pm <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr po
-    lift $ withForeignPtr pm $ \ pm -> optSet pm dimensions po nullPtr pbl pbu
-    lift $ withForeignPtr pm $ \ pm -> optDims pm dimensions 1
+    lift $ withForeignPtr pm $ \ pm -> optSet pm n po nullPtr pbl pbu
+    lift $ withForeignPtr pm $ \ pm -> optDims pm n 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
     return pm
 
