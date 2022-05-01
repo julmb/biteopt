@@ -1,6 +1,6 @@
 {-# LANGUAGE FlexibleContexts #-}
 
-module Numeric.Biteopt (minimize, minimize') where
+module Numeric.Biteopt (minimize) where
 
 import Control.Exception
 import Control.Monad
@@ -50,12 +50,6 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
-foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
-    CInt -> FunPtr Obj -> Ptr Void ->
-    Ptr CDouble -> Ptr CDouble -> Ptr CDouble -> Ptr CDouble ->
-    CInt -> CInt -> CInt ->
-    CInt -> FunPtr Rng -> Ptr Void -> IO CInt
-
 biteObj :: ([Double] -> Double) -> IO (FunPtr Obj)
 biteObj f = objWrapper eval where
     eval n p = const $ do
@@ -70,8 +64,8 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
-minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
-minimize' gen bounds objective = unsafePerformIO $ flip runContT return $ do
+minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
+minimize gen bounds objective = unsafePerformIO $ flip runContT return $ do
     pr <- lift $ rnd gen
     -- TODO: fromIntegral here?
     let dimensions = length bounds
@@ -84,18 +78,3 @@ minimize' gen bounds objective = unsafePerformIO $ flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
     lift $ repeatIO $ flip runContT return $ get dimensions pm pr
-
-minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
-minimize gen bounds objective = flip runContT return $ do
-    let dimensions = length bounds
-    po <- lift $ biteObj objective
-    let (boundLower, boundUpper) = unzip $ coerce bounds
-    pbl <- ContT $ withArray boundLower
-    pbu <- ContT $ withArray boundUpper
-    px <- ContT $ allocaArray dimensions
-    py <- ContT alloca
-    pr <- lift $ maybe (return nullFunPtr) rng gen
-    n <- lift $ biteoptMinimize (fromIntegral dimensions) po nullPtr pbl pbu px py 20000 1 1 1 pr nullPtr
-    x <- lift $ peekArray dimensions px
-    y <- lift $ peek py
-    return (coerce x, coerce y, n)

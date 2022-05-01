@@ -14,7 +14,7 @@ rng :: Word64 -> [Word32]
 rng = unfoldr (Just . nextWord32) . mkSMGen
 
 get :: [[Double]]
-get = take 320 $ minimize' (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
+get = take 320 $ minimize (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
 
 main :: IO ()
 main = do
