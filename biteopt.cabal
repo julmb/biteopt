@@ -21,5 +21,6 @@ library
 executable test
   import:              configuration
   ghc-options:         -threaded -with-rtsopts=-N
+  hs-source-dirs:      tests
   main-is:             test.hs
   build-depends:       base, parallel, splitmix, biteopt
