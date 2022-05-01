@@ -4,7 +4,6 @@
 
 // TODO: const modifiers?
 // TOOD: expose all parameters
-// TODO: skip steps without position change?
 
 extern "C" CBiteRnd* rnd_new() { printf("rnd_new\n"); return new CBiteRnd(); }
 extern "C" void rnd_free(CBiteRnd* rnd) { printf("rnd_free\n"); delete rnd; }
