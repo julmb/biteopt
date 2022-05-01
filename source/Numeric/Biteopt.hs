@@ -4,6 +4,7 @@ import Control.Monad.Cont
 import Data.Void
 import Data.Coerce
 import Data.IORef
+import Text.Printf
 import System.IO.Unsafe
 import Foreign
 import Foreign.C
@@ -50,6 +51,7 @@ foreign import ccall "opt_best" optBest :: Ptr Opt -> IO (Ptr CDouble)
 
 opt :: Int -> ([Double] -> Double) -> [(Double, Double)] -> ForeignPtr Rnd -> IO (ForeignPtr Opt)
 opt depth objective bounds prnd = flip runContT return $ do
+    when (depth < 1) $ error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
     let n = fromIntegral $ length bounds
     pobj <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = unzip bounds
