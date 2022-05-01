@@ -48,8 +48,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> IO (Ptr CDouble)
 
-opt :: Int -> [(Double, Double)] -> ([Double] -> Double) -> ForeignPtr Rnd -> IO (ForeignPtr Opt)
-opt depth bounds objective prnd = flip runContT return $ do
+opt :: Int -> ([Double] -> Double) -> [(Double, Double)] -> ForeignPtr Rnd -> IO (ForeignPtr Opt)
+opt depth objective bounds prnd = flip runContT return $ do
     let n = fromIntegral $ length bounds
     pobj <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = unzip bounds
@@ -66,8 +66,8 @@ step popt prnd n = do
     withForeignPtr popt $ withForeignPtr prnd . optStep
     coerce $ withForeignPtr popt optBest >>= peekArray n
 
-minimize :: RandomSource -> Int -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
-minimize source depth bounds objective = unsafePerformIO $ do
+minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
+minimize source depth objective bounds = unsafePerformIO $ do
     prnd <- rnd source
-    popt <- opt depth bounds objective prnd
+    popt <- opt depth objective bounds prnd
     repeatIO $ step popt prnd $ length bounds

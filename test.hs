@@ -19,10 +19,10 @@ slow :: (Num a, Enum a) => [a] -> a
 slow xs = sum $ map (x *) [0..1000000] where [x] = xs
 
 runRosenbrock :: Word64 -> [[Double]]
-runRosenbrock i = take 320 $ minimize (Sequence $ rng i) 1 [(-2, 2), (-2, 2)] rosenbrock
+runRosenbrock i = take 320 $ minimize (Sequence $ rng i) 1 rosenbrock [(-2, 2), (-2, 2)]
 
 runSlow :: Int32 -> [[Double]]
-runSlow i = take 1000 $ minimize (Internal i) 6 [(-1, 1)] slow
+runSlow i = take 1000 $ minimize (Internal i) 6 slow [(-1, 1)]
 
 testRosenbrock :: IO ()
 testRosenbrock = do
