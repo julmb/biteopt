@@ -50,9 +50,7 @@ foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
 obj :: ([Double] -> Double) -> Obj
-obj f n p = const $ do
-    xs <- peekArray (fromIntegral n) p
-    return $ coerce $ f $ coerce xs
+obj f n p = const $ coerce . f . coerce <$> peekArray (fromIntegral n) p
 
 get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> ContT r IO [Double]
 get n pm pr = do
