@@ -30,11 +30,14 @@ foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
 foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr Rng -> Ptr Void -> IO ()
 
-rnd :: Maybe [Word32] -> IO (ForeignPtr Rnd)
-rnd source = do
-    prf <- maybe (return nullFunPtr) rng source
+rnd :: Either Int [Word32] -> IO (ForeignPtr Rnd)
+rnd (Left seed) = do
+    pr <- manage rndNew rndFree $ return ()
+    withForeignPtr pr $ \ pr -> rndInit pr (fromIntegral seed) nullFunPtr nullPtr
+    return pr
+rnd (Right source) = do
+    prf <- rng source
     pr <- manage rndNew rndFree $ trace "rf_free" $ freeHaskellFunPtr prf
-    -- TODO: expose seed of integrated rng
     withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
 
@@ -64,7 +67,7 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
-minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
+minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ flip runContT return $ do
     pr <- lift $ rnd gen
     -- TODO: fromIntegral here?
