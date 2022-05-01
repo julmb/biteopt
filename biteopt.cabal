@@ -19,5 +19,6 @@ library
 
 executable test
   import:              configuration
+  ghc-options:         -threaded -with-rtsopts=-N
   main-is:             test.hs
-  build-depends:       base, splitmix, biteopt
+  build-depends:       base, parallel, splitmix, biteopt
