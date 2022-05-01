@@ -1,7 +1,6 @@
 module Foreign.Utilities (repeatIO, Wrapper, manage) where
 
-import Control.Exception
-import Control.Monad.Cont
+import Control.Monad
 import System.IO.Unsafe
 import Foreign
 import Foreign.Concurrent
