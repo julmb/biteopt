@@ -11,7 +11,10 @@ repeatIO m = go where go = unsafeInterleaveIO $ liftM2 (:) m go
 
 type Wrapper a = a -> IO (FunPtr a)
 
-newForeignPtr' :: IO (Ptr a) -> (Ptr a -> IO ()) -> IO (ForeignPtr a)
-newForeignPtr' new free = do
+newForeignPtr' :: IO (Ptr a) -> (Ptr a -> IO ()) -> IO () -> IO (ForeignPtr a)
+newForeignPtr' new free finalize = do
     p <- new
-    Foreign.Concurrent.newForeignPtr p $ free p
+    pf <- newForeignPtr_ p
+    Foreign.Concurrent.addForeignPtrFinalizer pf finalize
+    Foreign.Concurrent.addForeignPtrFinalizer pf (free p)
+    return pf
