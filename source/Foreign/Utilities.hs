@@ -16,5 +16,5 @@ newForeignPtr' new free finalize = do
     p <- new
     pf <- newForeignPtr_ p
     Foreign.Concurrent.addForeignPtrFinalizer pf finalize
-    Foreign.Concurrent.addForeignPtrFinalizer pf (free p)
+    Foreign.Concurrent.addForeignPtrFinalizer pf $ free p
     return pf
