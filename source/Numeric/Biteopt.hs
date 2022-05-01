@@ -10,8 +10,10 @@ import Data.Coerce
 import Data.IORef
 import Foreign
 import Foreign.C
+import Foreign.Concurrent
 import Foreign.Utilities
 import System.IO.Unsafe
+import Debug.Trace
 
 type BiteRnd = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper BiteRnd
@@ -64,6 +66,7 @@ mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
 mkRng rng = do
     prf <- maybe (return nullFunPtr) biteRnd rng
     pr <- lift $ rndNew >>= newForeignPtr' rndFree
+    lift $ Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
     -- TODO: expose seed of integrated rng
     lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
