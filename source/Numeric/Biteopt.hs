@@ -60,9 +60,6 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
-inf :: IO a -> IO [a]
-inf m = go where go = unsafeInterleaveIO $ liftM2 (:) m go
-
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
