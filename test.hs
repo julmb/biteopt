@@ -21,7 +21,7 @@ resultRosenbrock :: [[Double]]
 resultRosenbrock = take 320 $ minimize (Right $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
 
 resultSlow :: Word64 -> [[Double]]
-resultSlow i = take 1000 $ minimize (Right $ rng i) [(-1, 1)] slow
+resultSlow i = take 1000 $ minimize (Left $ fromIntegral i) [(-1, 1)] slow
 
 testRosenbrock :: IO ()
 testRosenbrock = do
