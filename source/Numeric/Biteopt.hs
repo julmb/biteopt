@@ -1,5 +1,7 @@
 module Numeric.Biteopt (minimize) where
 
+import Prelude hiding (init)
+
 import Control.Exception
 import Control.Monad
 import Control.Monad.Cont
@@ -62,8 +64,8 @@ opt bounds objective = flip runContT return $ do
     lift $ withForeignPtr popt $ \ popt -> optDims popt n 1
     return popt
 
-inita :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
-inita popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> optInit popt prng
+init :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
+init popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> optInit popt prng
 
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
 step popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> void $ optStep popt prng
@@ -76,6 +78,6 @@ minimize gen bounds objective = unsafePerformIO $ do
     let n = length bounds
     prng <- rnd gen
     popt <- opt bounds objective
-    x <- inita popt prng >> best n popt
+    x <- init popt prng >> best n popt
     xs <- repeatIO $ step popt prng >> best n popt
     return $ x : xs
