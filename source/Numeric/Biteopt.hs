@@ -18,8 +18,8 @@ import Debug.Trace
 type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
-rng :: [Word32] -> IO (FunPtr Rng)
-rng xs = newIORef xs >>= rngWrapper . next where
+rng :: [Word32] -> IO Rng
+rng xs = next <$> newIORef xs where
     next r = const $ do
         x : xs <- readIORef r
         writeIORef r xs
@@ -36,7 +36,7 @@ rnd (Left seed) = do
     withForeignPtr pr $ \ pr -> rndInit pr (fromIntegral seed) nullFunPtr nullPtr
     return pr
 rnd (Right source) = do
-    prf <- rng source
+    prf <- rng source >>= rngWrapper
     pr <- manage rndNew rndFree $ trace "rf_free" $ freeHaskellFunPtr prf
     withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
