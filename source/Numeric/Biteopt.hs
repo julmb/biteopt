@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Numeric.Biteopt (minimize) where
 
 import Control.Exception
