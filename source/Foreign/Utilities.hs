@@ -1,12 +1,19 @@
-module Foreign.Utilities (repeatIO, Wrapper, manage) where
+module Foreign.Utilities (repeatIO, push, pop, Wrapper, manage) where
 
 import Control.Monad
+import Data.IORef
 import System.IO.Unsafe
 import Foreign
 import Foreign.Concurrent
 
 repeatIO :: IO a -> IO [a]
 repeatIO m = go where go = unsafeInterleaveIO $ liftM2 (:) m go
+
+push :: IORef [a] -> a -> IO ()
+push r x = do xs <- readIORef r; writeIORef r $ x : xs
+
+pop :: IORef [a] -> IO a
+pop r = do x : xs <- readIORef r; writeIORef r xs; return x
 
 type Wrapper a = a -> IO (FunPtr a)
 

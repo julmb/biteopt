@@ -20,10 +20,7 @@ foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
 rng :: [Word32] -> IO Rng
 rng = fmap next . newIORef where
-    next r = const $ do
-        x : xs <- readIORef r
-        writeIORef r xs
-        return $ coerce x
+    next r = const $ coerce <$> pop r
 
 data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
