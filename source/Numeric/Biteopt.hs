@@ -72,15 +72,10 @@ best n pm = flip runContT return $ do
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
 step pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> void $ optStep pm pr
 
-get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> IO [Double]
-get n pm pr = do
-    step pm pr
-    best n pm
-
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
     pr <- rnd gen
     pm <- opt pr bounds objective
     x <- best (length bounds) pm
-    xs <- repeatIO $ get (length bounds) pm pr
+    xs <- repeatIO $ step pm pr >> best (length bounds) pm
     return $ x : xs
