@@ -50,8 +50,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
-opt :: ForeignPtr Rnd -> [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
-opt pr bounds objective = flip runContT return $ do
+opt :: [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
+opt bounds objective = flip runContT return $ do
     let n = fromIntegral $ length bounds
     po <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = coerce $ unzip bounds
@@ -60,8 +60,10 @@ opt pr bounds objective = flip runContT return $ do
     pm <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr po
     lift $ withForeignPtr pm $ \ pm -> optSet pm n po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm n 1
-    lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
     return pm
+
+inita :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
+inita pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
 
 best :: Int -> ForeignPtr Opt -> IO [Double]
 best n pm = flip runContT return $ do
@@ -75,7 +77,8 @@ step pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> void $ optS
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
     pr <- rnd gen
-    pm <- opt pr bounds objective
+    pm <- opt bounds objective
+    inita pm pr
     x <- best (length bounds) pm
     xs <- repeatIO $ step pm pr >> best (length bounds) pm
     return $ x : xs
