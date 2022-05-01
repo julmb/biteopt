@@ -1,4 +1,4 @@
-#include "biteopt/biteopt.h"
+#include "biteopt.h"
 
 extern "C" CBiteRnd* rnd_new() { return new CBiteRnd(); }
 extern "C" void rnd_free(CBiteRnd* rnd) { delete rnd; }
