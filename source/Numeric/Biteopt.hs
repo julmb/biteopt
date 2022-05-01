@@ -66,6 +66,7 @@ mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
 mkRng rng = do
     prf <- maybe (return nullFunPtr) biteRnd rng
     pr <- lift $ newForeignPtr' rndNew rndFree
+    -- TODO: this gets freed before rnd itself
     lift $ Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
     -- TODO: expose seed of integrated rng
     lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
