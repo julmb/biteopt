@@ -65,15 +65,14 @@ opt prnd bounds objective = flip runContT return $ do
     lift $ withForeignPtr popt $ \ popt -> withForeignPtr prnd $ \ prnd -> optInit popt prnd
     return popt
 
-step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
-step popt prnd = withForeignPtr popt $ \ popt -> withForeignPtr prnd $ \ prnd -> void $ optStep popt prnd
-
-best :: Int -> ForeignPtr Opt -> IO [Double]
-best n popt = coerce $ withForeignPtr popt optBest >>= peekArray n
+step :: ForeignPtr Opt -> ForeignPtr Rnd -> Int -> IO [Double]
+step popt prnd n = do
+    withForeignPtr popt $ \ popt -> withForeignPtr prnd $ \ prnd -> void $ optStep popt prnd
+    coerce $ withForeignPtr popt optBest >>= peekArray n
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
     let n = length bounds
     prnd <- rnd gen
     popt <- opt prnd bounds objective
-    repeatIO $ step popt prnd >> best n popt
+    repeatIO $ step popt prnd n
