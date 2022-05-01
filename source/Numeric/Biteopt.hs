@@ -1,17 +1,12 @@
 module Numeric.Biteopt (minimize) where
 
-import Prelude hiding (init)
-
-import Control.Exception
-import Control.Monad
 import Control.Monad.Cont
 import Data.Void
 import Data.Coerce
 import Data.IORef
 import System.IO.Unsafe
-import Foreign hiding (void)
+import Foreign
 import Foreign.C
-import Foreign.Concurrent
 import Foreign.Utilities
 import Debug.Trace
 
@@ -67,7 +62,7 @@ opt prnd bounds objective = flip runContT return $ do
 
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> Int -> IO [Double]
 step popt prnd n = do
-    withForeignPtr popt $ \ popt -> withForeignPtr prnd $ \ prnd -> void $ optStep popt prnd
+    withForeignPtr popt $ withForeignPtr prnd . optStep
     coerce $ withForeignPtr popt optBest >>= peekArray n
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
