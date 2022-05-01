@@ -47,8 +47,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> IO (Ptr CDouble)
 
-opt :: ForeignPtr Rnd -> [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
-opt prnd bounds objective = flip runContT return $ do
+opt :: [(Double, Double)] -> ([Double] -> Double) -> ForeignPtr Rnd -> IO (ForeignPtr Opt)
+opt bounds objective prnd = flip runContT return $ do
     let n = fromIntegral $ length bounds
     pobj <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = unzip bounds
@@ -67,7 +67,6 @@ step popt prnd n = do
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
-    let n = length bounds
     prnd <- rnd gen
-    popt <- opt prnd bounds objective
-    repeatIO $ step popt prnd n
+    popt <- opt bounds objective prnd
+    repeatIO $ step popt prnd $ length bounds
