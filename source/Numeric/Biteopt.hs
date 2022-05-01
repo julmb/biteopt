@@ -52,8 +52,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
-get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> ContT r IO [Double]
-get n pm pr = do
+get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> IO [Double]
+get n pm pr = flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optStep pm pr
     px <- ContT $ allocaArray n
     lift $ withForeignPtr pm $ \ pm -> optBest pm px
@@ -73,4 +73,4 @@ minimize gen bounds objective = unsafePerformIO $ flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
-    lift $ repeatIO $ flip runContT return $ get dimensions pm pr
+    lift $ repeatIO $ get dimensions pm pr
