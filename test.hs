@@ -3,6 +3,7 @@ module Main where
 import Control.Concurrent
 import Control.Parallel.Strategies
 import Data.List
+import Data.Int
 import Data.Word
 import System.Mem
 import System.Random.SplitMix
@@ -18,10 +19,10 @@ slow :: (Num a, Enum a) => [a] -> a
 slow xs = sum $ map (x *) [0..1000000] where [x] = xs
 
 runRosenbrock :: Word64 -> [[Double]]
-runRosenbrock i = take 320 $ minimize (Right $ rng i) 1 [(-2, 2), (-2, 2)] rosenbrock
+runRosenbrock i = take 320 $ minimize (Sequence $ rng i) 1 [(-2, 2), (-2, 2)] rosenbrock
 
-runSlow :: Int -> [[Double]]
-runSlow i = take 1000 $ minimize (Left i) 6 [(-1, 1)] slow
+runSlow :: Int32 -> [[Double]]
+runSlow i = take 1000 $ minimize (Internal i) 6 [(-1, 1)] slow
 
 testRosenbrock :: IO ()
 testRosenbrock = do

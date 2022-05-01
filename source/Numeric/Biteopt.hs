@@ -1,4 +1,4 @@
-module Numeric.Biteopt (minimize) where
+module Numeric.Biteopt (RandomSource (..), minimize) where
 
 import Control.Monad.Cont
 import Data.Void
@@ -13,20 +13,22 @@ type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
 rng :: [Word32] -> IO Rng
-rng source = const . coerce . pop <$> newIORef source
+rng sequence = const . coerce . pop <$> newIORef sequence
 
 data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
 foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr Rng -> Ptr Void -> IO ()
 
-rnd :: Either Int [Word32] -> IO (ForeignPtr Rnd)
-rnd (Left seed) = do
+data RandomSource = Internal Int32 | Sequence [Word32]
+
+rnd :: RandomSource -> IO (ForeignPtr Rnd)
+rnd (Internal seed) = do
     prnd <- manage rndNew rndFree $ return ()
-    withForeignPtr prnd $ \ prnd -> rndInit prnd (fromIntegral seed) nullFunPtr nullPtr
+    withForeignPtr prnd $ \ prnd -> rndInit prnd (coerce seed) nullFunPtr nullPtr
     return prnd
-rnd (Right source) = do
-    prng <- rng source >>= rngWrapper
+rnd (Sequence sequence) = do
+    prng <- rng sequence >>= rngWrapper
     prnd <- manage rndNew rndFree $ freeHaskellFunPtr prng
     withForeignPtr prnd $ \ prnd -> rndInit prnd 0 prng nullPtr
     return prnd
@@ -64,8 +66,8 @@ step popt prnd n = do
     withForeignPtr popt $ withForeignPtr prnd . optStep
     coerce $ withForeignPtr popt optBest >>= peekArray n
 
-minimize :: Either Int [Word32] -> Int -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
-minimize gen depth bounds objective = unsafePerformIO $ do
-    prnd <- rnd gen
+minimize :: RandomSource -> Int -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
+minimize source depth bounds objective = unsafePerformIO $ do
+    prnd <- rnd source
     popt <- opt depth bounds objective prnd
     repeatIO $ step popt prnd $ length bounds
