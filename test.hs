@@ -34,17 +34,24 @@ testRosenbrock = do
     threadDelay 1000
     putStrLn $ unlines $ show <$> take 10 result
 
+testRosenbrockMany :: IO ()
+testRosenbrockMany = do
+    let par = withStrategy $ parList rseq
+    let result = par $ rosenbrock . last . runRosenbrock <$> [0..10]
+    print result
+
 testSlow :: IO ()
 testSlow = do
-    getNumCapabilities >>= print
-    let a = last . runSlow <$> [0..3]
-    let b = withStrategy $ parList rseq
-    print $ b a
+    let par = withStrategy $ parList rseq
+    let result = par $ last . runSlow <$> [0..3]
+    print result
     performGC
     threadDelay 1000
-    print $ b a
+    print result
 
 main :: IO ()
 main = do
-    testRosenbrock
+    getNumCapabilities >>= print
+    --testRosenbrock
+    testRosenbrockMany
     --testSlow
