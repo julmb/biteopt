@@ -76,6 +76,4 @@ minimize gen bounds objective = unsafePerformIO $ do
     let n = length bounds
     prnd <- rnd gen
     popt <- opt prnd bounds objective
-    x <- best n popt
-    xs <- repeatIO $ step popt prnd >> best n popt
-    return $ x : xs
+    repeatIO $ step popt prnd >> best n popt
