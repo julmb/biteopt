@@ -54,9 +54,9 @@ opt :: [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
 opt bounds objective = flip runContT return $ do
     let n = fromIntegral $ length bounds
     pobj <- lift $ objWrapper $ obj objective
-    let (boundLower, boundUpper) = coerce $ unzip bounds
-    pbl <- ContT $ withArray boundLower
-    pbu <- ContT $ withArray boundUpper
+    let (boundLower, boundUpper) = unzip bounds
+    pbl <- ContT $ withArray $ coerce boundLower
+    pbu <- ContT $ withArray $ coerce boundUpper
     popt <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr pobj
     lift $ withForeignPtr popt $ \ popt -> optSet popt n pobj nullPtr pbl pbu
     lift $ withForeignPtr popt $ \ popt -> optDims popt n 1
@@ -65,11 +65,11 @@ opt bounds objective = flip runContT return $ do
 inita :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
 inita popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> optInit popt prng
 
-best :: Int -> ForeignPtr Opt -> IO [Double]
-best n popt = coerce $ withForeignPtr popt optBest >>= peekArray n
-
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
 step popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> void $ optStep popt prng
+
+best :: Int -> ForeignPtr Opt -> IO [Double]
+best n popt = coerce $ withForeignPtr popt optBest >>= peekArray n
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
