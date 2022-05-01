@@ -86,7 +86,7 @@ minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
-    lift $ inf $ flip runContT return $ get dimensions pm pr
+    lift $ repeatIO $ flip runContT return $ get dimensions pm pr
 
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do

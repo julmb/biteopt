@@ -1,4 +1,4 @@
-module Foreign.Utilities (inf, Wrapper, newForeignPtr') where
+module Foreign.Utilities (repeatIO, Wrapper, newForeignPtr') where
 
 import Control.Exception
 import Control.Monad.Cont
@@ -6,8 +6,8 @@ import System.IO.Unsafe
 import Foreign
 import Foreign.Concurrent
 
-inf :: IO a -> IO [a]
-inf m = go where go = unsafeInterleaveIO $ liftM2 (:) m go
+repeatIO :: IO a -> IO [a]
+repeatIO m = go where go = unsafeInterleaveIO $ liftM2 (:) m go
 
 type Wrapper a = a -> IO (FunPtr a)
 
