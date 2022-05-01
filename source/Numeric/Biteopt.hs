@@ -66,7 +66,6 @@ inf action = do
     rest <- unsafeInterleaveIO $ inf action
     return $ item : rest
 
--- TODO: if this returns an infinite list, the optimizer is never freed (or maybe it just gets gced?)
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     prf <- maybe (return nullFunPtr) biteRnd rng
