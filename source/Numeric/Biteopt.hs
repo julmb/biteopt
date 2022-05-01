@@ -50,17 +50,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
-get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> IO [Double]
-get n pm pr = flip runContT return $ do
-    lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optStep pm pr
-    px <- ContT $ allocaArray n
-    lift $ withForeignPtr pm $ \ pm -> optBest pm px
-    xs <- lift $ peekArray n px
-    return $ coerce xs
-
-minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
-minimize gen bounds objective = unsafePerformIO $ flip runContT return $ do
-    pr <- lift $ rnd gen
+opt :: ForeignPtr Rnd -> [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
+opt pr bounds objective = flip runContT return $ do
     -- TODO: fromIntegral here?
     let dimensions = length bounds
     po <- lift $ objWrapper $ obj objective
@@ -71,4 +62,18 @@ minimize gen bounds objective = unsafePerformIO $ flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
-    lift $ repeatIO $ get dimensions pm pr
+    return pm
+
+get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> IO [Double]
+get n pm pr = flip runContT return $ do
+    lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optStep pm pr
+    px <- ContT $ allocaArray n
+    lift $ withForeignPtr pm $ \ pm -> optBest pm px
+    xs <- lift $ peekArray n px
+    return $ coerce xs
+
+minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
+minimize gen bounds objective = unsafePerformIO $ do
+    pr <- rnd gen
+    pm <- opt pr bounds objective
+    repeatIO $ get (length bounds) pm pr
