@@ -1,0 +1,5 @@
+static (header-only) libraries and c++
+	https://wiki.haskell.org/CPlusPlus_from_Haskell
+	https://stackoverflow.com/questions/37572628/statically-link-c-library-with-a-haskell-library
+foreign funptr
+	https://mail.haskell.org/pipermail/haskell-cafe/2009-September/066125.html
