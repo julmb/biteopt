@@ -19,7 +19,7 @@ get = take 320 $ minimize' (Just $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
 main :: IO ()
 main = do
     let result = get
-    putStrLn $ unlines $ show <$> result
+    putStrLn $ unlines $ show <$> drop 300 result
     performGC
     threadDelay 1000
     putStrLn $ unlines $ show <$> take 2 result
