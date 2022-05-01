@@ -66,10 +66,7 @@ inita :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
 inita pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
 
 best :: Int -> ForeignPtr Opt -> IO [Double]
-best n pm = flip runContT return $ do
-    px <- ContT $ allocaArray n
-    lift $ withForeignPtr pm $ \ pm -> optBest pm px
-    lift $ coerce $ peekArray n px
+best n pm = withForeignPtr pm $ \ pm -> coerce $ buffer n (optBest pm)
 
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
 step pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> void $ optStep pm pr
