@@ -64,12 +64,16 @@ opt pr bounds objective = flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
     return pm
 
+best :: Int -> ForeignPtr Opt -> IO [CDouble]
+best n pm = flip runContT return $ do
+    px <- ContT $ allocaArray n
+    lift $ withForeignPtr pm $ \ pm -> optBest pm px
+    lift $ peekArray n px
+
 get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> IO [Double]
 get n pm pr = flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optStep pm pr
-    px <- ContT $ allocaArray n
-    lift $ withForeignPtr pm $ \ pm -> optBest pm px
-    xs <- lift $ peekArray n px
+    xs <- lift $ best n pm
     return $ coerce xs
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
