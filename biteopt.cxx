@@ -2,8 +2,6 @@
 
 #include "biteopt/biteopt.h"
 
-// TODO: const modifiers?
-
 extern "C" CBiteRnd* rnd_new() { printf("rnd_new\n"); return new CBiteRnd(); }
 extern "C" void rnd_free(CBiteRnd* rnd) { printf("rnd_free\n"); delete rnd; }
 extern "C" void rnd_init(CBiteRnd* rnd, int seed, biteopt_rng rf, void* rdata) { rnd->init(seed, rf, rdata); }
