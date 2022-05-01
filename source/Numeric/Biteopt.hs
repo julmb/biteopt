@@ -60,12 +60,17 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
-minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
-minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
+mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
+mkRng rng = do
     prf <- maybe (return nullFunPtr) biteRnd rng
     pr <- lift $ rndNew >>= newForeignPtr rndFree
     -- TODO: expose seed of integrated rng
     lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
+    return pr
+
+minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
+minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
+    pr <- mkRng rng
     -- TODO: fromIntegral here?
     let dimensions = length bounds
     po <- biteObj objective
