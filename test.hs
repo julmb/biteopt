@@ -17,26 +17,27 @@ rosenbrock xy = (a - x) ^ 2 + b * (y - x ^ 2) ^ 2 where [x, y] = xy; a = 1; b = 
 slow :: (Num a, Enum a) => [a] -> a
 slow xs = sum $ map (x *) [0..1000000] where [x] = xs
 
-resultRosenbrock :: [[Double]]
-resultRosenbrock = take 320 $ minimize (Right $ rng 0) [(-2, 2), (-2, 2)] rosenbrock
+runRosenbrock :: Word64 -> [[Double]]
+runRosenbrock i = take 320 $ minimize (Right $ rng i) [(-2, 2), (-2, 2)] rosenbrock
 
-resultSlow :: Word64 -> [[Double]]
-resultSlow i = take 1000 $ minimize (Left $ fromIntegral i) [(-1, 1)] slow
+runSlow :: Int -> [[Double]]
+runSlow i = take 1000 $ minimize (Left i) [(-1, 1)] slow
 
 testRosenbrock :: IO ()
 testRosenbrock = do
-    putStrLn $ unlines $ show <$> take 10 resultRosenbrock
+    let result = runRosenbrock 0
+    putStrLn $ unlines $ show <$> take 10 result
     performGC
     threadDelay 1000
-    putStrLn $ unlines $ show <$> drop 310 resultRosenbrock
+    putStrLn $ unlines $ show <$> drop 310 result
     performGC
     threadDelay 1000
-    putStrLn $ unlines $ show <$> take 10 resultRosenbrock
+    putStrLn $ unlines $ show <$> take 10 result
 
 testSlow :: IO ()
 testSlow = do
     getNumCapabilities >>= print
-    let a = last . resultSlow <$> [0..3]
+    let a = last . runSlow <$> [0..3]
     let b = withStrategy $ parList rseq
     print $ b a
     performGC
@@ -45,5 +46,5 @@ testSlow = do
 
 main :: IO ()
 main = do
-    --testRosenbrock
-    testSlow
+    testRosenbrock
+    --testSlow
