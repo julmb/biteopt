@@ -31,8 +31,8 @@ foreign import ccall "rnd_free" rndFree :: Ptr Rnd -> IO ()
 foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr Rng -> Ptr Void -> IO ()
 
 rnd :: Maybe [Word32] -> IO (ForeignPtr Rnd)
-rnd gen = do
-    prf <- maybe (return nullFunPtr) rng gen
+rnd source = do
+    prf <- maybe (return nullFunPtr) rng source
     pr <- manage rndNew rndFree $ trace "rf_free" $ freeHaskellFunPtr prf
     -- TODO: expose seed of integrated rng
     withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
