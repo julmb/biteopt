@@ -41,15 +41,15 @@ foreign import ccall "biteopt_minimize_wrapper" biteoptMinimize ::
     CInt -> CInt -> CInt ->
     CInt -> FunPtr BiteRnd -> Ptr Void -> IO CInt
 
-biteRnd :: [Word32] -> ContT r IO (FunPtr BiteRnd)
-biteRnd xs = lift (newIORef xs) >>= lift . rngWrapper . next where
+biteRnd :: [Word32] -> IO (FunPtr BiteRnd)
+biteRnd xs = newIORef xs >>= rngWrapper . next where
     next r = const $ do
         x : xs <- readIORef r
         writeIORef r xs
         return $ coerce x
 
-biteObj :: ([Double] -> Double) -> ContT r IO (FunPtr BiteObj)
-biteObj f = lift $ objWrapper eval where
+biteObj :: ([Double] -> Double) -> IO (FunPtr BiteObj)
+biteObj f = objWrapper eval where
     eval n p = const $ do
         xs <- peekArray (fromIntegral n) p
         return $ coerce $ f $ coerce xs
@@ -64,7 +64,7 @@ get n pm pr = do
 
 mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
 mkRng rng = do
-    prf <- maybe (return nullFunPtr) biteRnd rng
+    prf <- lift $ maybe (return nullFunPtr) biteRnd rng
     pr <- lift $ newForeignPtr' rndNew rndFree
     -- TODO: this gets freed before rnd itself
     lift $ Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
@@ -77,7 +77,7 @@ minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     pr <- mkRng rng
     -- TODO: fromIntegral here?
     let dimensions = length bounds
-    po <- biteObj objective
+    po <- lift $ biteObj objective
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
@@ -90,13 +90,13 @@ minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
 minimize :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> IO ([Double], Double, CInt)
 minimize rng bounds objective = flip runContT return $ do
     let dimensions = length bounds
-    po <- biteObj objective
+    po <- lift $ biteObj objective
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
     px <- ContT $ allocaArray dimensions
     py <- ContT alloca
-    pr <- maybe (return nullFunPtr) biteRnd rng
+    pr <- lift $ maybe (return nullFunPtr) biteRnd rng
     n <- lift $ biteoptMinimize (fromIntegral dimensions) po nullPtr pbl pbu px py 20000 1 1 1 pr nullPtr
     x <- lift $ peekArray dimensions px
     y <- lift $ peek py
