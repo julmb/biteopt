@@ -21,4 +21,4 @@ manage :: IO (Ptr a) -> (Ptr a -> IO ()) -> IO () -> IO (ForeignPtr a)
 manage new free finalize = do p <- new; Foreign.Concurrent.newForeignPtr p $ free p >> finalize
 
 buffer :: Storable a => Int -> (Ptr a -> IO ()) -> IO [a]
-buffer n action = allocaArray n $ \ p -> do action p; peekArray n p
+buffer n m = allocaArray n $ \ p -> do m p; peekArray n p
