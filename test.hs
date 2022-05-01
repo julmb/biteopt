@@ -53,5 +53,5 @@ main :: IO ()
 main = do
     getNumCapabilities >>= print
     --testRosenbrock
-    testRosenbrockMany
-    --testSlow
+    --testRosenbrockMany
+    testSlow

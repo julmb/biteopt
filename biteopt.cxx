@@ -8,7 +8,7 @@
 
 extern "C" CBiteRnd* rnd_new() { printf("rnd_new\n"); return new CBiteRnd(); }
 extern "C" void rnd_free(CBiteRnd* rnd) { printf("rnd_free\n"); delete rnd; }
-extern "C" void rnd_init(CBiteRnd* rnd, int seed, biteopt_rng rf, void* rdata) { rnd->init(0, rf, rdata); }
+extern "C" void rnd_init(CBiteRnd* rnd, int seed, biteopt_rng rf, void* rdata) { rnd->init(seed, rf, rdata); }
 
 extern "C" CBiteOptMinimize* opt_new() { printf("opt_new\n"); return new CBiteOptMinimize(); }
 extern "C" void opt_free(CBiteOptMinimize* opt) { printf("opt_free\n"); delete opt; }
