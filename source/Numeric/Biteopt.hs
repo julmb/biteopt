@@ -6,7 +6,7 @@ import Control.Monad.Cont
 import Data.Void
 import Data.Coerce
 import Data.IORef
-import Foreign
+import Foreign hiding (void)
 import Foreign.C
 import Foreign.Concurrent
 import Foreign.Utilities
@@ -69,9 +69,12 @@ best n pm = flip runContT return $ do
     lift $ withForeignPtr pm $ \ pm -> optBest pm px
     lift $ coerce $ peekArray n px
 
+step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
+step pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> void $ optStep pm pr
+
 get :: Int -> ForeignPtr Opt -> ForeignPtr Rnd -> IO [Double]
 get n pm pr = do
-    withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optStep pm pr
+    step pm pr
     best n pm
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
