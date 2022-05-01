@@ -19,7 +19,7 @@ type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
 
 rng :: [Word32] -> IO Rng
-rng source = const . fmap coerce . pop <$> newIORef source
+rng source = const . coerce . pop <$> newIORef source
 
 data Rnd
 foreign import ccall "rnd_new" rndNew :: IO (Ptr Rnd)
