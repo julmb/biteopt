@@ -67,7 +67,7 @@ mkRng rng = do
     prf <- maybe (return nullFunPtr) biteRnd rng
     pr <- newForeignPtr' rndNew rndFree
     -- TODO: this gets freed before rnd itself
-    Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
+    Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "rf_free" $ freeHaskellFunPtr prf
     -- TODO: expose seed of integrated rng
     withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
@@ -82,6 +82,7 @@ minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
     pm <- lift $ newForeignPtr' optNew optFree
+    lift $ Foreign.Concurrent.addForeignPtrFinalizer pm $ trace "obj_free" $ freeHaskellFunPtr po
     lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
