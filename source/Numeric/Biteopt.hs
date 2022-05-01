@@ -57,7 +57,7 @@ opt bounds objective prnd = flip runContT return $ do
     popt <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr pobj
     lift $ withForeignPtr popt $ \ popt -> optSet popt n pobj nullPtr pbl pbu
     lift $ withForeignPtr popt $ \ popt -> optDims popt n 1
-    lift $ withForeignPtr popt $ \ popt -> withForeignPtr prnd $ \ prnd -> optInit popt prnd
+    lift $ withForeignPtr popt $ withForeignPtr prnd . optInit
     return popt
 
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> Int -> IO [Double]
