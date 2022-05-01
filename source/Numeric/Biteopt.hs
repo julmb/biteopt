@@ -65,7 +65,7 @@ get n pm pr = do
 mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
 mkRng rng = do
     prf <- maybe (return nullFunPtr) biteRnd rng
-    pr <- lift $ rndNew >>= newForeignPtr' rndFree
+    pr <- lift $ newForeignPtr' rndNew rndFree
     lift $ Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
     -- TODO: expose seed of integrated rng
     lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
@@ -80,7 +80,7 @@ minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- lift $ optNew >>= newForeignPtr' optFree
+    pm <- lift $ newForeignPtr' optNew optFree
     lift $ withForeignPtr pm $ \ pm -> optSet pm (fromIntegral dimensions) po nullPtr pbl pbu
     lift $ withForeignPtr pm $ \ pm -> optDims pm (fromIntegral dimensions) 1
     lift $ withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr

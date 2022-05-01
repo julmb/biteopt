@@ -14,5 +14,7 @@ type Wrapper a = a -> IO (FunPtr a)
 withWrapper :: IO (FunPtr a) -> ContT r IO (FunPtr a)
 withWrapper = lift
 
-newForeignPtr' :: (Ptr a -> IO ()) -> Ptr a -> IO (ForeignPtr a)
-newForeignPtr' finalizer ptr = Foreign.Concurrent.newForeignPtr ptr $ finalizer ptr
+newForeignPtr' :: IO (Ptr a) -> (Ptr a -> IO ()) -> IO (ForeignPtr a)
+newForeignPtr' new free = do
+    p <- new
+    Foreign.Concurrent.newForeignPtr p $ free p
