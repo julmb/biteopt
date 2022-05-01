@@ -34,7 +34,7 @@ rnd (Left seed) = do
     return pr
 rnd (Right source) = do
     prf <- rng source >>= rngWrapper
-    pr <- manage rndNew rndFree $ trace "rf_free" $ freeHaskellFunPtr prf
+    pr <- manage rndNew rndFree $ trace "rng_free" $ freeHaskellFunPtr prf
     withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
 
