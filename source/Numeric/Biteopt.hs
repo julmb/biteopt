@@ -8,7 +8,6 @@ import System.IO.Unsafe
 import Foreign
 import Foreign.C
 import Foreign.Utilities
-import Debug.Trace
 
 type Rng = Ptr Void -> IO CUInt
 foreign import ccall "wrapper" rngWrapper :: Wrapper Rng
@@ -28,7 +27,7 @@ rnd (Left seed) = do
     return prnd
 rnd (Right source) = do
     prng <- rng source >>= rngWrapper
-    prnd <- manage rndNew rndFree $ trace "rng_free" $ freeHaskellFunPtr prng
+    prnd <- manage rndNew rndFree $ freeHaskellFunPtr prng
     withForeignPtr prnd $ \ prnd -> rndInit prnd 0 prng nullPtr
     return prnd
 
@@ -54,7 +53,7 @@ opt depth bounds objective prnd = flip runContT return $ do
     let (boundLower, boundUpper) = unzip bounds
     pbl <- ContT $ withArray $ coerce boundLower
     pbu <- ContT $ withArray $ coerce boundUpper
-    popt <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr pobj
+    popt <- lift $ manage optNew optFree $ freeHaskellFunPtr pobj
     lift $ withForeignPtr popt $ \ popt -> optSet popt n pobj nullPtr pbl pbu
     lift $ withForeignPtr popt $ \ popt -> optDims popt n $ fromIntegral depth
     lift $ withForeignPtr popt $ withForeignPtr prnd . optInit
