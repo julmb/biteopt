@@ -62,19 +62,19 @@ get n pm pr = do
     xs <- lift $ peekArray n px
     return $ coerce xs
 
-mkRng :: Maybe [Word32] -> ContT r IO (ForeignPtr Rnd)
+mkRng :: Maybe [Word32] -> IO (ForeignPtr Rnd)
 mkRng rng = do
-    prf <- lift $ maybe (return nullFunPtr) biteRnd rng
-    pr <- lift $ newForeignPtr' rndNew rndFree
+    prf <- maybe (return nullFunPtr) biteRnd rng
+    pr <- newForeignPtr' rndNew rndFree
     -- TODO: this gets freed before rnd itself
-    lift $ Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
+    Foreign.Concurrent.addForeignPtrFinalizer pr $ trace "prf_free" $ freeHaskellFunPtr prf
     -- TODO: expose seed of integrated rng
-    lift $ withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
+    withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
     return pr
 
 minimize' :: Maybe [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize' rng bounds objective = unsafePerformIO $ flip runContT return $ do
-    pr <- mkRng rng
+    pr <- lift $ mkRng rng
     -- TODO: fromIntegral here?
     let dimensions = length bounds
     po <- lift $ biteObj objective
