@@ -50,8 +50,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> Ptr CDouble -> IO ()
 
-biteObj :: ([Double] -> Double) -> IO (FunPtr Obj)
-biteObj f = objWrapper eval where
+biteObj :: ([Double] -> Double) -> IO Obj
+biteObj f = return eval where
     eval n p = const $ do
         xs <- peekArray (fromIntegral n) p
         return $ coerce $ f $ coerce xs
@@ -69,7 +69,7 @@ minimize gen bounds objective = unsafePerformIO $ flip runContT return $ do
     pr <- lift $ rnd gen
     -- TODO: fromIntegral here?
     let dimensions = length bounds
-    po <- lift $ biteObj objective
+    po <- lift $ biteObj objective >>= objWrapper
     let (boundLower, boundUpper) = unzip $ coerce bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
