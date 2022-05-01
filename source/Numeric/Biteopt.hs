@@ -6,11 +6,11 @@ import Control.Monad.Cont
 import Data.Void
 import Data.Coerce
 import Data.IORef
+import System.IO.Unsafe
 import Foreign hiding (void)
 import Foreign.C
 import Foreign.Concurrent
 import Foreign.Utilities
-import System.IO.Unsafe
 import Debug.Trace
 
 type Rng = Ptr Void -> IO CUInt
@@ -26,14 +26,14 @@ foreign import ccall "rnd_init" rndInit :: Ptr Rnd -> CInt -> FunPtr Rng -> Ptr 
 
 rnd :: Either Int [Word32] -> IO (ForeignPtr Rnd)
 rnd (Left seed) = do
-    pr <- manage rndNew rndFree $ return ()
-    withForeignPtr pr $ \ pr -> rndInit pr (fromIntegral seed) nullFunPtr nullPtr
-    return pr
+    prnd <- manage rndNew rndFree $ return ()
+    withForeignPtr prnd $ \ prnd -> rndInit prnd (fromIntegral seed) nullFunPtr nullPtr
+    return prnd
 rnd (Right source) = do
-    prf <- rng source >>= rngWrapper
-    pr <- manage rndNew rndFree $ trace "rng_free" $ freeHaskellFunPtr prf
-    withForeignPtr pr $ \ pr -> rndInit pr 0 prf nullPtr
-    return pr
+    prng <- rng source >>= rngWrapper
+    prnd <- manage rndNew rndFree $ trace "rng_free" $ freeHaskellFunPtr prng
+    withForeignPtr prnd $ \ prnd -> rndInit prnd 0 prng nullPtr
+    return prnd
 
 type Obj = CInt -> Ptr CDouble -> Ptr Void -> IO CDouble
 foreign import ccall "wrapper" objWrapper :: Wrapper Obj
@@ -53,29 +53,29 @@ foreign import ccall "opt_best" optBest :: Ptr Opt -> IO (Ptr CDouble)
 opt :: [(Double, Double)] -> ([Double] -> Double) -> IO (ForeignPtr Opt)
 opt bounds objective = flip runContT return $ do
     let n = fromIntegral $ length bounds
-    po <- lift $ objWrapper $ obj objective
+    pobj <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = coerce $ unzip bounds
     pbl <- ContT $ withArray boundLower
     pbu <- ContT $ withArray boundUpper
-    pm <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr po
-    lift $ withForeignPtr pm $ \ pm -> optSet pm n po nullPtr pbl pbu
-    lift $ withForeignPtr pm $ \ pm -> optDims pm n 1
-    return pm
+    popt <- lift $ manage optNew optFree $ trace "obj_free" $ freeHaskellFunPtr pobj
+    lift $ withForeignPtr popt $ \ popt -> optSet popt n pobj nullPtr pbl pbu
+    lift $ withForeignPtr popt $ \ popt -> optDims popt n 1
+    return popt
 
 inita :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
-inita pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> optInit pm pr
+inita popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> optInit popt prng
 
 best :: Int -> ForeignPtr Opt -> IO [Double]
-best n pm = coerce $ withForeignPtr pm optBest >>= peekArray n
+best n popt = coerce $ withForeignPtr popt optBest >>= peekArray n
 
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> IO ()
-step pm pr = withForeignPtr pm $ \ pm -> withForeignPtr pr $ \ pr -> void $ optStep pm pr
+step popt prng = withForeignPtr popt $ \ popt -> withForeignPtr prng $ \ prng -> void $ optStep popt prng
 
 minimize :: Either Int [Word32] -> [(Double, Double)] -> ([Double] -> Double) -> [[Double]]
 minimize gen bounds objective = unsafePerformIO $ do
     let n = length bounds
-    pr <- rnd gen
-    pm <- opt bounds objective
-    x <- inita pm pr >> best n pm
-    xs <- repeatIO $ step pm pr >> best n pm
+    prng <- rnd gen
+    popt <- opt bounds objective
+    x <- inita popt prng >> best n popt
+    xs <- repeatIO $ step popt prng >> best n popt
     return $ x : xs
