@@ -70,6 +70,7 @@ step popt prnd n = do
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
 minimize source depth objective bounds
     | depth < 1 = error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
+    | any (uncurry (>)) bounds = error $ printf "parameter 'bounds' (%s) cannot contain empty intervals" $ show bounds
     | otherwise = unsafePerformIO $ do
         prnd <- rnd source
         popt <- opt depth objective bounds prnd
