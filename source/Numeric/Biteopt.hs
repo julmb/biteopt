@@ -51,7 +51,6 @@ foreign import ccall "opt_best" optBest :: Ptr Opt -> IO (Ptr CDouble)
 
 opt :: Int -> ([Double] -> Double) -> [(Double, Double)] -> ForeignPtr Rnd -> IO (ForeignPtr Opt)
 opt depth objective bounds prnd = flip runContT return $ do
-    when (depth < 1) $ error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
     let n = fromIntegral $ length bounds
     pobj <- lift $ objWrapper $ obj objective
     let (boundLower, boundUpper) = unzip bounds
@@ -69,7 +68,9 @@ step popt prnd n = do
     coerce $ withForeignPtr popt optBest >>= peekArray n
 
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
-minimize source depth objective bounds = unsafePerformIO $ do
-    prnd <- rnd source
-    popt <- opt depth objective bounds prnd
-    repeatIO $ step popt prnd $ length bounds
+minimize source depth objective bounds
+    | depth < 1 = error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
+    | otherwise = unsafePerformIO $ do
+        prnd <- rnd source
+        popt <- opt depth objective bounds prnd
+        repeatIO $ step popt prnd $ length bounds
