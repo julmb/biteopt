@@ -6,7 +6,7 @@ import Data.Coerce
 import Data.IORef
 import Text.Printf
 import System.IO.Unsafe
-import Foreign
+import Foreign hiding (void)
 import Foreign.C
 import Foreign.Utilities
 
@@ -64,7 +64,7 @@ opt depth objective bounds prnd = flip runContT return $ do
 
 step :: ForeignPtr Opt -> ForeignPtr Rnd -> Int -> IO [Double]
 step popt prnd n = do
-    withForeignPtr popt $ withForeignPtr prnd . optStep
+    void $ withForeignPtr popt $ withForeignPtr prnd . optStep
     coerce $ withForeignPtr popt optBest >>= peekArray n
 
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
