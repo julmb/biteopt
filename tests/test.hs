@@ -13,7 +13,7 @@ rng :: Word64 -> [Word32]
 rng = unfoldr (Just . nextWord32) . mkSMGen
 
 rosenbrock :: Num a => [a] -> a
-rosenbrock xy = (a - x) ^ 2 + b * (y - x ^ 2) ^ 2 where [x, y] = xy; a = 1; b = 100
+rosenbrock xy = (a - x) ^ (2 :: Int) + b * (y - x ^ (2 :: Int)) ^ (2 :: Int) where [x, y] = xy; a = 1; b = 100
 
 slow :: (Num a, Enum a) => [a] -> a
 slow xs = sum $ map (x *) [0..1000000] where [x] = xs
