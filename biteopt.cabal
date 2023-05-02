@@ -16,7 +16,7 @@ library
   import:              configuration
   hs-source-dirs:      source
   include-dirs:        biteopt
-  cxx-sources:         source-c/biteopt.cxx
+  cxx-sources:         wrapper/biteopt.cxx
   exposed-modules:     Numeric.Biteopt
   other-modules:       Foreign.Utilities
   build-depends:       base, mtl
