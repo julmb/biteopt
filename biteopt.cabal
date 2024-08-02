@@ -8,7 +8,7 @@ build-type:          Simple
 common configuration
   default-language:    Haskell2010
   ghc-options:         -Wall -Wno-name-shadowing -Wunused-packages
-  ghc-options:         -O2 -pgml g++ -pgml-supports-no-pie
+  ghc-options:         -pgml g++ -pgml-supports-no-pie
   ghc-options:         -fmax-worker-args=16
   ghc-options:         -fllvm -pgmlc llc-14 -pgmlo opt-14 -optlo-O3 -Wno-unsupported-llvm-version
 
