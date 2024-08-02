@@ -1,6 +1,8 @@
 module Numeric.Biteopt (RandomSource (..), minimize) where
 
+import Control.Monad.Trans
 import Control.Monad.Cont
+import Data.Functor (void)
 import Data.Void
 import Data.Coerce
 import Data.IORef
