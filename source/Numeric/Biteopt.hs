@@ -69,6 +69,8 @@ step popt prnd n = do
     void $ withForeignPtr popt $ withForeignPtr prnd . optStep
     coerce $ withForeignPtr popt optBest >>= peekArray n
 
+-- TODO: maybe this should use a conduit instead of a lazy list?
+--       then the objective function can also live in a monad
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
 minimize source depth objective bounds
     | depth < 1 = error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
