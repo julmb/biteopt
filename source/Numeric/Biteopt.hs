@@ -52,6 +52,8 @@ foreign import ccall "opt_init" optInit :: Ptr Opt -> Ptr Rnd -> IO ()
 foreign import ccall "opt_step" optStep :: Ptr Opt -> Ptr Rnd -> IO CInt
 foreign import ccall "opt_best" optBest :: Ptr Opt -> IO (Ptr CDouble)
 
+-- TODO: why do we need ForeignPtr? maybe with conduit we can use lexical scoping instead?
+--       or maybe use ResourceT? some conduit functions already use it, maybe look at that
 opt :: Int -> ([Double] -> Double) -> [(Double, Double)] -> ForeignPtr Rnd -> IO (ForeignPtr Opt)
 opt depth objective bounds prnd = flip runContT return $ do
     let n = fromIntegral $ length bounds
