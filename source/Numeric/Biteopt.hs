@@ -73,6 +73,7 @@ step popt prnd n = do
 -- TODO: maybe this should use a conduit instead of a lazy list?
 --       then the objective function can also live in a monad
 -- TODO: use arbitrary traversable instead of list
+--       or maybe just use unboxed vectors here and add a traversable wrapper outside
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
 minimize source depth objective bounds
     | depth < 1 = error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
