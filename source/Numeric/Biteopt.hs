@@ -12,6 +12,7 @@ import Foreign hiding (void)
 import Foreign.C
 import Foreign.Utilities
 
+-- TODO: Sequence should probably be a conduit in the same monad as the optimization
 data RandomSource = Internal Int32 | Sequence [Word32]
 
 type Rng = Ptr Void -> IO CUInt
@@ -71,6 +72,7 @@ step popt prnd n = do
 
 -- TODO: maybe this should use a conduit instead of a lazy list?
 --       then the objective function can also live in a monad
+-- TODO: use arbitrary traversable instead of list
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
 minimize source depth objective bounds
     | depth < 1 = error $ printf "parameter 'depth' (%d) cannot be less than 1" depth
