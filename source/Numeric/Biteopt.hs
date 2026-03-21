@@ -74,6 +74,7 @@ step popt prnd n = do
 
 -- TODO: maybe this should use a conduit instead of a lazy list?
 --       then the objective function can also live in a monad
+--       we probably want to offer various layers of convenience: step, conduit, list
 -- TODO: use arbitrary traversable instead of list
 --       or maybe just use unboxed vectors here and add a traversable wrapper outside
 minimize :: RandomSource -> Int -> ([Double] -> Double) -> [(Double, Double)] -> [[Double]]
