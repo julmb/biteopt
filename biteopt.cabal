@@ -10,7 +10,6 @@ common configuration
   ghc-options:         -Wall -Wno-name-shadowing -Wunused-packages
   ghc-options:         -pgml g++ -pgml-supports-no-pie
   ghc-options:         -fmax-worker-args=16
-  ghc-options:         -fllvm -pgmlc llc-14 -pgmlo opt-14 -optlo-O3 -Wno-unsupported-llvm-version
 
 library
   import:              configuration
